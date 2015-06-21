@@ -92,23 +92,45 @@ public class Printout {
 		default:
 			switch (messageBytes[0] & 0xf0) {
 			case ShortMessage.NOTE_ON:
-				b.append("Note on ");
+				b.append("Note on: channel ");
 				b.append(Integer.toString(messageBytes[0] & 0x0f));
+				b.append(" key ");
+				b.append(Byte.toString(messageBytes[1]));
+				b.append(" velocity ");
+				b.append(Byte.toString(messageBytes[2]));
 				break;
 			case ShortMessage.NOTE_OFF:
-				b.append("Note off ");
+				b.append("Note off: channel ");
 				b.append(Integer.toString(messageBytes[0] & 0x0f));
+				b.append(" key ");
+				b.append(Byte.toString(messageBytes[1]));
+				b.append(" velocity ");
+				b.append(Byte.toString(messageBytes[2]));
 				break;
 			case ShortMessage.PROGRAM_CHANGE:
-				b.append("Program change ");
+				b.append("Program change: channel ");
 				b.append(Integer.toString(messageBytes[0] & 0x0f));
+				b.append(" instrument ");
+				b.append(Byte.toString(messageBytes[1]));
 				break;
 			case ShortMessage.CONTROL_CHANGE:
-				b.append("Control change");
+				b.append("Control change: channel ");
+				b.append(Integer.toString(messageBytes[0] & 0x0f));
+				b.append(" controller ");
+				b.append(Byte.toString(messageBytes[1]));
+				b.append(" value ");
+				b.append(Byte.toString(messageBytes[2]));
+				break;
+			case ShortMessage.PITCH_BEND:
+				b.append("Pitch bend: channel ");
+				b.append(Integer.toString(messageBytes[0] & 0x0f));
+				b.append(" value ");
+				b.append(Integer.toString((messageBytes[1] & 0xff) |
+						((messageBytes[2]) << 8)));
 				break;
 			default:
-				b.append("Unknown 0x");
-				b.append(Integer.toHexString(messageBytes[0]));
+				b.append("Unknown message 0x");
+				b.append(Integer.toHexString(messageBytes[0] & 0xff));
 			}
 		}
 			
