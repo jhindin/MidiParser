@@ -23,13 +23,16 @@ public class Main {
 
 	static final int MILLION = 1000000;
 	
+	static enum  PlayMode { JAVA, SOFT, PARSE };
+	static PlayMode playMode;
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		String midiFileName = null;
 		CliOptions options;
 		
 		try {
-			options = new CliOptions("h", new String[]{ "javaplay" });
+			options = new CliOptions("hp:");
 			options.parse(args);
 			String rargs[] = options.getRemaningArgs();
 			if (rargs.length == 0) {
@@ -44,6 +47,21 @@ public class Main {
 			}
 			
 			midiFileName = rargs[0];
+			
+			String arg = options.getOptionValue("p");
+			if (arg == null) {
+				playMode = PlayMode.PARSE;
+			} else if (arg.equals("java")) {
+				playMode = PlayMode.JAVA;
+			} else if (arg.equals("soft")) {
+				playMode = PlayMode.SOFT;
+			} else if (arg.equals("parse")) {
+				playMode = PlayMode.PARSE;
+			} else {
+				System.err.println("Unexpected value for 'p' option");
+				usage();
+				return;
+			}
 		} catch (ParsingException ex) {
 			System.err.println("Bad options " + ex);
 			return;
@@ -54,7 +72,8 @@ public class Main {
 			System.out.println("File " + midiFileName +" parsed");
 			
 
-			if (options.isOptionSet("javaplay")) {
+			switch (playMode) {
+			case JAVA:
 				System.out.println("Play with java");
 				try {
 					sequencer = MidiSystem.getSequencer();
@@ -66,8 +85,9 @@ public class Main {
 				} catch (Exception ex) {
 					System.err.println("Playing failed: " + ex);
 				}
-			} else {
-
+				break;
+			case SOFT:
+				System.out.println("Play midi with Java parser and custom sequencer");
 				System.out.println("Division type " + sequence.getDivisionType());
 				System.out.println("Resolution " + sequence.getResolution());
 				if (sequence.getDivisionType() == Sequence.PPQ) {
@@ -97,6 +117,10 @@ public class Main {
 					System.err.println("Playing failed: " + ex);
 					ex.printStackTrace();
 				}
+				break;
+			case PARSE:
+				System.err.println("Not yet implemented");
+				return;
 			}
 		} catch (InvalidMidiDataException e) {
 			// TODO Auto-generated catch block
@@ -110,7 +134,7 @@ public class Main {
 
 	static void usage()
 	{
-		System.err.println("MidiParser [-h] [--javaplay] <midi file>");
+		System.err.println("MidiParser [-h] [-p java|soft|parse] <midi file>");
 	}
 	
 	static Thread playTrack(Receiver receiver, Track track, float division, long resolution,
