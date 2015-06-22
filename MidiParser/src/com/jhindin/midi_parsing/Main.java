@@ -2,13 +2,8 @@ package com.jhindin.midi_parsing;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Formatter;
 
-import javax.sound.midi.ControllerEventListener;
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaEventListener;
-import javax.sound.midi.MetaMessage;
-import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Receiver;
