@@ -1,4 +1,4 @@
-package com.jhindin.midi_parsing;
+package com.jhindin.midi;
 
 public class PreciseTime  {
 	long millis;
