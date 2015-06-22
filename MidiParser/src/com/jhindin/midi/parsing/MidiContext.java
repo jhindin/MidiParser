@@ -50,7 +50,6 @@ public class MidiContext {
 		running = true;
 		Thread t = new Thread(new ParserTrackPlayer());
 		t.start();
-		
 	}
 	
 	public synchronized void stop() {
