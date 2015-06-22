@@ -202,6 +202,8 @@ public class Main {
 					sleepTillTime(eventTime);
 					receiver.send(event.getMessage(), 0);
 				}
+				/* Delay for receiver latency */
+				Thread.sleep(300);
 			} catch (Exception ex) {
 				System.err.println("Playing failed: " + ex);
 			}
