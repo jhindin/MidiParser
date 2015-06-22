@@ -1,7 +1,10 @@
 package com.jhindin.midi;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
@@ -10,6 +13,10 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
+
+import com.jhindin.midi.parsing.MessageListener;
+import com.jhindin.midi.parsing.MidiContext;
+import com.jhindin.midi.parsing.MidiException;
 
 import clioptions.CliOptions;
 import clioptions.exceptions.parsing.ParsingException;
@@ -115,14 +122,24 @@ public class Main {
 				}
 				break;
 			case PARSE:
-				System.err.println("Not yet implemented");
-				return;
+				BufferedInputStream bis = new BufferedInputStream(new FileInputStream(new File(midiFileName)));
+				MidiContext mc = new MidiContext(bis);
+				mc.addMessageListener(new MessageListener() {
+					
+					@Override
+					public void receiveMessage(byte[] message) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+					
+				break;
 			}
 		} catch (InvalidMidiDataException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MidiException e) {
 			e.printStackTrace();
 		}
 

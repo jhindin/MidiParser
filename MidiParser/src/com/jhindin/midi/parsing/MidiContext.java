@@ -2,6 +2,7 @@ package com.jhindin.midi.parsing;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MidiContext {
 	InputStream is;
@@ -10,6 +11,10 @@ public class MidiContext {
 	DivisionMode divisionMode;
 	short ticksPerPPQ; // for PPQ division
 	int ticksPerFrame, fps; // for SMTPE division;
+	
+	CopyOnWriteArrayList<MessageListener> listeners = new CopyOnWriteArrayList<>();
+	
+	boolean running = false;
 	
 	public MidiContext(InputStream is) throws IOException, MidiException {
 		this.is = is;
@@ -36,11 +41,41 @@ public class MidiContext {
 			fps = division & 0x7f00;
 		}
 	}
-
+	
 	short bytes2Short(byte raw[], int offset) {
 		return (short)(((raw[offset] & 0xff) << 8) | (raw[offset + 1] & 0xff));
 	}
+	
+	public synchronized void start() {
+		running = true;
+		Thread t = new Thread(new ParserTrackPlayer());
+		t.start();
+		
+	}
+	
+	public synchronized void stop() {
+		running = false;
+		this.notifyAll();
+	}
+	
+	public void addMessageListener(MessageListener l) {
+		listeners.add(l);
+	}
 
+	public void removeMessageListener(MessageListener l) {
+		listeners.remove(l);
+	}
 
+	void fireMessageListeners(byte message[]) {
+		for (MessageListener l : listeners) 
+			l.receiveMessage(message);
+	}
+
+	class ParserTrackPlayer implements Runnable {
+		@Override
+		public void run() {
+			
+		}
+	}
 
 }
