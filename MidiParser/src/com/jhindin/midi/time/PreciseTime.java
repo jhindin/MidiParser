@@ -1,36 +1,38 @@
-package com.jhindin.midi;
+package com.jhindin.midi.time;
 
 public class PreciseTime  {
-	long millis;
-	int nanos;
+	public long millis;
+	public int nanos;
 
+	static final int MILLION = 1000000;
+	
 	public PreciseTime(long millis, int nanos) {			
-		this.millis = millis + nanos / Main.MILLION;
-		this.nanos = nanos % Main.MILLION;
+		this.millis = millis + nanos / MILLION;
+		this.nanos = nanos % MILLION;
 	}
 	
 	public static void mult(PreciseTime a1, long a2, PreciseTime res) {
 		res.millis = a1.millis * a2;
 		
 		long n = a1.nanos * a2;
-		res.millis += n / Main.MILLION;
-		res.nanos = (int)(n % Main.MILLION);
+		res.millis += n / MILLION;
+		res.nanos = (int)(n % MILLION);
 	}
 
 	public static void add(PreciseTime a1, PreciseTime a2, PreciseTime res) {
 		res.millis = a1.millis + a2.millis;
 		
 		int n = a1.nanos + a2.nanos; 
-		res.millis += n / Main.MILLION;
-		res.nanos = (int)(n % Main.MILLION);
+		res.millis += n / MILLION;
+		res.nanos = (int)(n % MILLION);
 	}
 	
 	public static void div(PreciseTime a1, long a2, PreciseTime res) {
 		res.millis = a1.millis / a2;
 		
-		long n = ((a1.millis % a2) * Main.MILLION + a1.nanos) / a2; 
-		res.millis += n / Main.MILLION;
-		res.nanos = (int)(n % Main.MILLION);
+		long n = ((a1.millis % a2) * MILLION + a1.nanos) / a2; 
+		res.millis += n / MILLION;
+		res.nanos = (int)(n % MILLION);
 		
 	}
 

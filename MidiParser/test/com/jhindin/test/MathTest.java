@@ -2,7 +2,7 @@ package com.jhindin.test;
 
 import static org.junit.Assert.*;
 
-import com.jhindin.midi.PreciseTime;
+import com.jhindin.midi.time.PreciseTime;
 
 import org.junit.Test;
 

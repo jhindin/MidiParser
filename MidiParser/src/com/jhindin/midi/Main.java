@@ -19,8 +19,6 @@ public class Main {
 	static Sequencer sequencer;
 	static Receiver receiver;
 
-	static final int MILLION = 1000000;
-	
 	static enum  PlayMode { JAVA, SOFT, PARSE };
 	static PlayMode playMode;
 	
