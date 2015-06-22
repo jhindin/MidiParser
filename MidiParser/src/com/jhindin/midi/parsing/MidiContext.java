@@ -1,24 +1,25 @@
 package com.jhindin.midi.parsing;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MidiContext {
-	InputStream is;
+	RandomAccessFile raf;
 	short format, nTracks, division;
-	enum DivisionMode { PPQ_DIVISION, SMTPE_DIVISION } ;
+	public enum DivisionMode { PPQ_DIVISION, SMTPE_DIVISION } ;
 	DivisionMode divisionMode;
+
 	short ticksPerPPQ; // for PPQ division
 	int ticksPerFrame, fps; // for SMTPE division;
 	
-	CopyOnWriteArrayList<MessageListener> listeners = new CopyOnWriteArrayList<>();
+	Track tracks[];
 	
 	boolean running = false;
 	
-	public MidiContext(InputStream is) throws IOException, MidiException {
-		this.is = is;
-		Chunk header = Chunk.getInMemoryChunk(is);
+	public MidiContext(RandomAccessFile raf) throws IOException, MidiException {
+		this.raf = raf;
+		MemoryChunk header = MemoryChunk.getChunk(raf);
 		
 		if (header.body.length != 6) {
 			throw new MidiException("Unexpected header length " + header.body.length);
@@ -40,8 +41,45 @@ public class MidiContext {
 			ticksPerFrame = division & 0xff;
 			fps = division & 0x7f00;
 		}
+		
+		if (format == 2) {
+			tracks = new Track[nTracks];
+		
+			for (int i = 0; i < nTracks; i++) {
+				long pos = raf.getFilePointer();
+				tracks[i].chunk = RandomAccessChunk.getChunk(raf);
+				pos += tracks[i].chunk.length + 8;
+				raf.seek(pos);
+			}
+		} else {
+			// TODO - type 0 and 1 should work with both random access file and stream
+		}
 	}
 	
+	public int getFormat() {
+		return format;
+	}
+
+	public DivisionMode getDivisionMode() {
+		return divisionMode;
+	}
+
+	public short getNTracks() {
+		return nTracks;
+	}
+
+	public short getTicksPerPPQ() {
+		return ticksPerPPQ;
+	}
+
+	public int getTicksPerFrame() {
+		return ticksPerFrame;
+	}
+
+	public int getFps() {
+		return fps;
+	}
+
 	short bytes2Short(byte raw[], int offset) {
 		return (short)(((raw[offset] & 0xff) << 8) | (raw[offset + 1] & 0xff));
 	}
@@ -57,17 +95,15 @@ public class MidiContext {
 		this.notifyAll();
 	}
 	
-	public void addMessageListener(MessageListener l) {
-		listeners.add(l);
+	public void addMessageListener(int track, MessageListener l) {
+		// TODO - listeners are bound to track for format 2 and context for 0 and 1
 	}
 
-	public void removeMessageListener(MessageListener l) {
-		listeners.remove(l);
+	public void removeMessageListener(int track, MessageListener l) {
+		// TODO - listeners are bound to track for format 2 and context for 0 and 1
 	}
 
-	void fireMessageListeners(byte message[]) {
-		for (MessageListener l : listeners) 
-			l.receiveMessage(message);
+	void fireMessageListeners(int track, byte message[]) {
 	}
 
 	class ParserTrackPlayer implements Runnable {
@@ -75,6 +111,11 @@ public class MidiContext {
 		public void run() {
 			
 		}
+	}
+	
+	class Track {
+		RandomAccessChunk chunk;
+		CopyOnWriteArrayList<MessageListener> listeners = new CopyOnWriteArrayList<>();
 	}
 
 }

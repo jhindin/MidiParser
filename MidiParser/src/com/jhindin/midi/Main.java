@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
@@ -122,12 +123,12 @@ public class Main {
 				}
 				break;
 			case PARSE:
-				BufferedInputStream bis = new BufferedInputStream(new FileInputStream(new File(midiFileName)));
-				MidiContext mc = new MidiContext(bis);
-				mc.addMessageListener(new MessageListener() {
+				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r'");
+				MidiContext mc = new MidiContext(raf);
+				mc.addMessageListener(0, new MessageListener() {
 					
 					@Override
-					public void receiveMessage(byte[] message) {
+					public void receiveMessage(int track, byte[] message) {
 						// TODO Auto-generated method stub
 						
 					}
