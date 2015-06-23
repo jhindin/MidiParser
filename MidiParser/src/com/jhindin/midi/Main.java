@@ -16,7 +16,7 @@ import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
 
 import com.jhindin.midi.parsing.MessageListener;
-import com.jhindin.midi.parsing.MidiContext;
+import com.jhindin.midi.parsing.MidiParsingSequencer;
 import com.jhindin.midi.parsing.MidiException;
 
 import clioptions.CliOptions;
@@ -124,7 +124,7 @@ public class Main {
 				break;
 			case PARSE:
 				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r");
-				MidiContext mc = new MidiContext(raf);
+				MidiParsingSequencer mc = new MidiParsingSequencer(raf);
 				mc.addMessageListener(0, new MessageListener() {
 					
 					@Override

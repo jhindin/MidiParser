@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class MidiContext {
+public class MidiParsingSequencer {
 	short format, nTracks, division;
 	public enum DivisionMode { PPQ_DIVISION, SMTPE_DIVISION } ;
 	DivisionMode divisionMode;
@@ -17,7 +17,7 @@ public class MidiContext {
 	
 	boolean running = false;
 	
-	public MidiContext(RandomAccessFile raf) throws IOException, MidiException {
+	public MidiParsingSequencer(RandomAccessFile raf) throws IOException, MidiException {
 		InputStream fcis = new ChannelInputStream(raf.getChannel());
 		parseHeader(fcis);
 		if (format == 2) {
