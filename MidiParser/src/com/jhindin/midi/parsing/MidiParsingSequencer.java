@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.jhindin.midi.time.PreciseTime;
+
 public class MidiParsingSequencer {
 	short format, nTracks, division;
 	public enum DivisionMode { PPQ_DIVISION, SMTPE_DIVISION } ;
@@ -14,8 +16,11 @@ public class MidiParsingSequencer {
 	int ticksPerFrame, fps; // for SMTPE division;
 	
 	Track tracks[];
+	int currentTrack = 0;
 	
 	boolean running = false;
+	
+	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
 	
 	public MidiParsingSequencer(RandomAccessFile raf) throws IOException, MidiException {
 		InputStream fcis = new ChannelInputStream(raf.getChannel());
@@ -98,13 +103,28 @@ public class MidiParsingSequencer {
 	
 	public synchronized void start() {
 		running = true;
-		Thread t = new Thread(new ParserTrackPlayer());
-		t.start();
+		if (format == 2) {
+			for (int i = 0; i < tracks.length; i++) {
+				tracks[i].t = new Thread(new ParserTrackPlayer(tracks[i]));
+				tracks[i].t.start();
+			}
+		} else {
+			currentTrack = 0;
+			tracks[currentTrack].t = new Thread(new ParserTrackPlayer(tracks[currentTrack]));
+			tracks[currentTrack].t.start();
+		}
 	}
 	
 	public synchronized void stop() {
 		running = false;
 		this.notifyAll();
+		if (format == 2) {
+			for (int i = 0; i < tracks.length; i++) {
+				tracks[i].t = null;;
+			}
+		} else {
+			tracks[currentTrack].t = null;
+		}
 	}
 	
 	public void addMessageListener(int track, MessageListener l) {
@@ -125,8 +145,22 @@ public class MidiParsingSequencer {
 
 
 	class ParserTrackPlayer implements Runnable {
+		Track track;
+		
+		public ParserTrackPlayer(Track track) {
+			this.track = track;
+		}
 		@Override
 		public void run() {
+			try {
+				MidiEvent event = MidiEvent.read(track.chunk.is);
+				if (event == null)
+					return;
+				
+			} catch (Exception ex) {
+				track.exception = ex;
+				return;
+			}
 			
 		}
 	}
@@ -134,10 +168,13 @@ public class MidiParsingSequencer {
 	class Track {
 		int index;
 		StreamChunk chunk;
+		Exception exception;
+		Thread t;
 		
 		Track(int index, StreamChunk chunk) {
 			this.index = index;
 			this.chunk = chunk;
+			exception = null;
 		}
 		CopyOnWriteArrayList<MessageListener> listeners = new CopyOnWriteArrayList<>();
 
