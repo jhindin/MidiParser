@@ -65,7 +65,7 @@ public class MidiContext {
 	
 	void setupSingleTrack(InputStream is) throws IOException, MidiException {
 		tracks = new Track[1];
-		tracks[0].chunk = StreamChunk.getChunk(is);
+		tracks[0] = new Track(0, StreamChunk.getChunk(is));
 	}
 	
 	public int getFormat() {

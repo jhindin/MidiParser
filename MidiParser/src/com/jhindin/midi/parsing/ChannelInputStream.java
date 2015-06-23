@@ -13,6 +13,7 @@ public class ChannelInputStream extends InputStream {
 		super();
 		this.fc = fc;
 		fc.read(buf);
+		buf.flip();
 	}
 
 	@Override
