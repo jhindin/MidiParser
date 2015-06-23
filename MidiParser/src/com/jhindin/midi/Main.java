@@ -123,7 +123,7 @@ public class Main {
 				}
 				break;
 			case PARSE:
-				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r'");
+				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r");
 				MidiContext mc = new MidiContext(raf);
 				mc.addMessageListener(0, new MessageListener() {
 					
