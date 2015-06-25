@@ -6,20 +6,7 @@ import java.io.InputStream;
 public class MidiEvent {
 	long deltaTick;
 	MidiMessage message;
-	
-	public static final byte SYSEX_START      = (byte)0xf0;
-	public static final byte SYSEX_ESCAPE     = (byte)0xf7;
-	public static final byte META             = (byte)0xff;
-	
-	// Most significant half-byte
-	public static final byte NOTE_ON          = (byte)0x80;
-	public static final byte NOTE_OFF         = (byte)0x90;
-	public static final byte POLYPHN_PRESSURE = (byte)0xA0;
-	public static final byte CNTRL_CHANGE     = (byte)0xB0;
-	public static final byte PROGRAM_CHANGE   = (byte)0xC0;
-	public static final byte CHNL_PRESSURE    = (byte)0xD0;
-	public static final byte PITCH_BEND       = (byte)0xE0;
-	
+
 	static final byte messageLength[] = { 
 		3, // 0x8 Note on 
 		3, // 0x9 Note off
@@ -49,58 +36,41 @@ public class MidiEvent {
 		return message;
 	}
 	
-	static long readVariableLength(InputStream is) throws IOException, MidiException {
-		int c;
-		long ret = 0;
-		
-		for (int i = 0; i < 4; i++) {
-			c = is.read();
-			if (c < 0) 
-				throw new MidiException("Unexpected EOF");
-			
-			ret |= (c & 0x7f) << ( 24 - i * 8);
-			if ((c & 0x80) == 0)
-				break;
-		}
-		return ret;
-		
-	}
-	
 	public static MidiEvent read(InputStream is)  throws IOException, MidiException {
 		MidiEvent event = new MidiEvent();
 		int rc;
 		
-		event.deltaTick = readVariableLength(is); 
-
-		int opcode = is.read();
-		if (opcode < 0) 
-			throw new MidiException("Unexpected EOF");
+		event.deltaTick = readVariableLength(is);
 
 		long length;
+		
+		int status = is.read();
+		if (status < 0) 
+			throw new MidiException("Unexpected EOF");
 
-		switch (opcode & 0xf0) {
+		switch (status & 0xf0) {
 		case 0xf0:
-			switch (opcode) {
-			case SYSEX_START:
-			case SYSEX_ESCAPE:
-				length = readVariableLength(is);
+			switch (status) {
+			case MidiMessage.SYSEX_START:
+			case MidiMessage.SYSEX_ESCAPE:
 				MidiSysexMessage sysexMesage = new MidiSysexMessage();
+				length = readVariableLength(is);
 				sysexMesage.data = new byte[(int)length];
-				sysexMesage.opcode = opcode;
+				sysexMesage.status = status;
 				rc = is.read(sysexMesage.data);
 				if (rc < 0) 
 					throw new MidiException("Unexpected EOF");
 				event.message = sysexMesage;
 				break;
-			case META:
-				int c = is.read();
-				if (c < 0)
+			case MidiMessage.META:
+				int type = is.read();
+				if (type < 0)
 					throw new MidiException("Unexpected EOF");
+				MidiMetaMessage metaMessage = new MidiMetaMessage();
 				
 				length = readVariableLength(is);
 				
-				MidiMetaMessage metaMessage = new MidiMetaMessage();
-				metaMessage.type = c;
+				metaMessage.type = type;
 				metaMessage.data = new byte[(int)length];
 				rc = is.read(metaMessage.data);
 				if (rc < 0) 
@@ -108,29 +78,53 @@ public class MidiEvent {
 				event.message = metaMessage;
 				break;
 			default:
-				throw new MidiException("Unexpected event type " + (opcode & 0xff));
+				throw new MidiException("Unexpected event type " + (status & 0xff));
 			}
-		case NOTE_ON:
-		case NOTE_OFF:
-		case POLYPHN_PRESSURE:
-		case CNTRL_CHANGE:
-		case PROGRAM_CHANGE:
-		case CHNL_PRESSURE:
-		case PITCH_BEND:
-			int len = messageLength[(opcode & 0xf0) >> 4 + 8];
+		case MidiMessage.NOTE_ON:
+		case MidiMessage.NOTE_OFF:
+		case MidiMessage.POLYPHN_PRESSURE:
+		case MidiMessage.CNTRL_CHANGE:
+		case MidiMessage.PROGRAM_CHANGE:
+		case MidiMessage.CHNL_PRESSURE:
+		case MidiMessage.PITCH_BEND:
+			int len = messageLength[(status & 0xf0) >> 4 + 8];
 			MidiMessage m = new MidiMessage();
 			m.data = new byte[len];
-			m.data[0] = (byte)opcode;
+			m.data[0] = (byte)status;
 			
 			rc = is.read(m.data, 1, len - 1);
 			if (rc < 0) 
 				throw new MidiException("Unexpected EOF");
 			break;
 		default:
-			throw new MidiException("Unexpected event type " + (opcode & 0xff));
+			throw new MidiException("Unexpected event type " + (status & 0xff));
 		}
 
 		return event;
+	}
+
+	static final long readVariableLength(InputStream is)
+			throws IOException, MidiException {
+		int c;
+		int i;
+		long length = 0;;
+		
+		for (i = 0; i < 4; i++) {
+			c = is.read();
+			if (c < 0) 
+				throw new MidiException("Unexpected EOF");
+			
+			length |= (c & 0x7f) << ( 24 - i * 8);
+			if ((c & 0x80) == 0)
+				break;
+		}
+		
+		return length;
+	}
+
+	@Override
+	public String toString() {
+		return "At " + Long.toString(deltaTick) + ":" + message;
 	}
 	
 }
