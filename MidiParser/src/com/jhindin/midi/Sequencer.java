@@ -21,12 +21,12 @@ public class Sequencer {
 		running = true;
 		if (sequence.format == 2) {
 			for (int i = 0; i < trackThreads.length; i++) {
-				trackThreads[i].t = new Thread(new ParserTrackPlayer(trackThreads[i]));
+				trackThreads[i].t = new Thread(trackThreads[i]);
 				trackThreads[i].t.start();
 			}
 		} else {
 			currentTrack = 0;
-			trackThreads[currentTrack].t = new Thread(new ParserTrackPlayer(trackThreads[currentTrack]));
+			trackThreads[currentTrack].t = new Thread(trackThreads[currentTrack]);
 			trackThreads[currentTrack].t.start();
 		}
 	}
@@ -59,7 +59,7 @@ public class Sequencer {
 		}
 	}
 	
-	class TrackThread {
+	class TrackThread implements Runnable{
 		Thread t;
 		Exception exception;
 		CopyOnWriteArrayList<MessageListener> listeners = new CopyOnWriteArrayList<>();
@@ -75,23 +75,16 @@ public class Sequencer {
 				l.receiveMessage(index, message);
 			}
 		}
-	}
 
-	class ParserTrackPlayer implements Runnable {
-		TrackThread track;
-		
-		public ParserTrackPlayer(TrackThread track) {
-			this.track = track;
-		}
 		@Override
 		public void run() {
 			try {
-				MidiEvent event = MidiEvent.read(track.sequenceTrack.chunk.is);
+				MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is);
 				if (event == null)
 					return;
 				
 			} catch (Exception ex) {
-				track.exception = ex;
+				exception = ex;
 				return;
 			}
 			
