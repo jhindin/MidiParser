@@ -60,9 +60,7 @@ public class Sequencer {
 			trackThreads[0].listeners.remove(l);
 		}
 	}
-	
-	
-	
+
 	class TrackThread implements Runnable{
 		Thread t;
 		Exception exception;
@@ -93,7 +91,6 @@ public class Sequencer {
 				}
 				return;
 			}
-			
 		}
 	}
 }
