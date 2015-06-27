@@ -1,4 +1,4 @@
-package com.jhindin.midi.parsing;
+package com.jhindin.midi;
 
 import java.io.EOFException;
 import java.io.IOException;

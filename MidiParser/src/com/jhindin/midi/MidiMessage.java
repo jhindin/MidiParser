@@ -1,4 +1,4 @@
-package com.jhindin.midi.parsing;
+package com.jhindin.midi;
 
 public class MidiMessage {
 	byte data[];

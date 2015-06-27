@@ -1,10 +1,7 @@
-package com.jhindin.midi;
+package com.jhindin.midi.main;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.RandomAccessFile;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -14,8 +11,8 @@ import javax.sound.midi.Sequencer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
 
-import com.jhindin.midi.parsing.MessageListener;
-import com.jhindin.midi.parsing.MidiException;
+import com.jhindin.midi.MessageListener;
+import com.jhindin.midi.MidiException;
 
 import clioptions.CliOptions;
 import clioptions.exceptions.parsing.ParsingException;
@@ -122,7 +119,7 @@ public class Main {
 				break;
 			case PARSE:
 				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r");
-				com.jhindin.midi.parsing.Sequence mc = new com.jhindin.midi.parsing.Sequence(raf);
+				com.jhindin.midi.Sequence mc = new com.jhindin.midi.Sequence(raf);
 				mc.addMessageListener(0, new MessageListener() {
 					
 					@Override

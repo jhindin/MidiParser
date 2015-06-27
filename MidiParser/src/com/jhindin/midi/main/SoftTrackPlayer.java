@@ -1,4 +1,4 @@
-package com.jhindin.midi;
+package com.jhindin.midi.main;
 
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.Receiver;
