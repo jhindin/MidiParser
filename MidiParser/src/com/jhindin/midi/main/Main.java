@@ -120,7 +120,8 @@ public class Main {
 			case PARSE:
 				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r");
 				com.jhindin.midi.Sequence mc = new com.jhindin.midi.Sequence(raf);
-				mc.addMessageListener(0, new MessageListener() {
+				com.jhindin.midi.Sequencer sequencer = new com.jhindin.midi.Sequencer(mc);
+				sequencer.addMessageListener(0, new MessageListener() {
 					
 					@Override
 					public void receiveMessage(int track, byte[] message) {

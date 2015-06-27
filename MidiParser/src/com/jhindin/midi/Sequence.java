@@ -3,7 +3,6 @@ package com.jhindin.midi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.jhindin.midi.time.PreciseTime;
 
@@ -16,9 +15,6 @@ public class Sequence {
 	int ticksPerFrame, fps; // for SMTPE division;
 	
 	Track tracks[];
-	int currentTrack = 0;
-	
-	boolean running = false;
 	
 	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
 	
@@ -101,87 +97,16 @@ public class Sequence {
 		return (short)(((raw[offset] & 0xff) << 8) | (raw[offset + 1] & 0xff));
 	}
 	
-	public synchronized void start() {
-		running = true;
-		if (format == 2) {
-			for (int i = 0; i < tracks.length; i++) {
-				tracks[i].t = new Thread(new ParserTrackPlayer(tracks[i]));
-				tracks[i].t.start();
-			}
-		} else {
-			currentTrack = 0;
-			tracks[currentTrack].t = new Thread(new ParserTrackPlayer(tracks[currentTrack]));
-			tracks[currentTrack].t.start();
-		}
-	}
-	
-	public synchronized void stop() {
-		running = false;
-		this.notifyAll();
-		if (format == 2) {
-			for (int i = 0; i < tracks.length; i++) {
-				tracks[i].t = null;;
-			}
-		} else {
-			tracks[currentTrack].t = null;
-		}
-	}
-	
-	public void addMessageListener(int track, MessageListener l) {
-		if (format == 2) {
-			tracks[track].listeners.add(l);
-		} else {
-			tracks[0].listeners.add(l);
-		}
-	}
-
-	public void removeMessageListener(int track, MessageListener l) {
-		if (format == 2) {
-			tracks[track].listeners.remove(l);
-		} else {
-			tracks[0].listeners.remove(l);
-		}
-	}
 
 
-	class ParserTrackPlayer implements Runnable {
-		Track track;
-		
-		public ParserTrackPlayer(Track track) {
-			this.track = track;
-		}
-		@Override
-		public void run() {
-			try {
-				MidiEvent event = MidiEvent.read(track.chunk.is);
-				if (event == null)
-					return;
-				
-			} catch (Exception ex) {
-				track.exception = ex;
-				return;
-			}
-			
-		}
-	}
 	
 	class Track {
 		int index;
 		StreamChunk chunk;
-		Exception exception;
-		Thread t;
 		
 		Track(int index, StreamChunk chunk) {
 			this.index = index;
 			this.chunk = chunk;
-			exception = null;
-		}
-		CopyOnWriteArrayList<MessageListener> listeners = new CopyOnWriteArrayList<>();
-
-		void fireMessageListeners(byte message[]) {
-			for (MessageListener l : listeners) {
-				l.receiveMessage(index, message);
-			}
 		}
 	}
 
