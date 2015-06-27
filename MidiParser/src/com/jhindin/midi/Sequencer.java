@@ -45,7 +45,7 @@ public class Sequencer {
 		}
 	}
 	
-	public void addMessageListener(int track, MessageListener l) {
+	public void addMessageListener(int track, EventListener l) {
 		if (sequence.format == 2) {
 			trackThreads[track].listeners.add(l);
 		} else {
@@ -53,7 +53,7 @@ public class Sequencer {
 		}
 	}
 
-	public void removeMessageListener(int track, MessageListener l) {
+	public void removeMessageListener(int track, EventListener l) {
 		if (sequence.format == 2) {
 			trackThreads[track].listeners.remove(l);
 		} else {
@@ -64,7 +64,7 @@ public class Sequencer {
 	class TrackThread implements Runnable{
 		Thread t;
 		Exception exception;
-		CopyOnWriteArrayList<MessageListener> listeners = new CopyOnWriteArrayList<>();
+		CopyOnWriteArrayList<EventListener> listeners = new CopyOnWriteArrayList<>();
 		int index;
 		Sequence.Track sequenceTrack;
 		
@@ -72,9 +72,9 @@ public class Sequencer {
 			this.sequenceTrack = sequenceTrack;
 		}
 
-		void fireMessageListeners(byte message[]) {
-			for (MessageListener l : listeners) {
-				l.receiveMessage(index, message);
+		void fireMessageListeners(MidiEvent event) {
+			for (EventListener l : listeners) {
+				l.receiveEvent(index, event);
 			}
 		}
 
@@ -84,6 +84,8 @@ public class Sequencer {
 				MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is);
 				if (event == null)
 					return;
+				
+				fireMessageListeners(event);
 				
 			} catch (Exception ex) {
 				for (StateListener l : stateListeners) {

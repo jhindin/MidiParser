@@ -11,7 +11,7 @@ import javax.sound.midi.Sequencer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
 
-import com.jhindin.midi.MessageListener;
+import com.jhindin.midi.EventListener;
 import com.jhindin.midi.MidiException;
 
 import clioptions.CliOptions;
@@ -121,10 +121,10 @@ public class Main {
 				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r");
 				com.jhindin.midi.Sequence mc = new com.jhindin.midi.Sequence(raf);
 				com.jhindin.midi.Sequencer sequencer = new com.jhindin.midi.Sequencer(mc);
-				sequencer.addMessageListener(0, new MessageListener() {
+				sequencer.addMessageListener(0, new com.jhindin.midi.EventListener() {
 					
 					@Override
-					public void receiveMessage(int track, byte[] message) {
+					public void receiveEvent(int track, com.jhindin.midi.MidiEvent e) {
 						// TODO Auto-generated method stub
 						
 					}
