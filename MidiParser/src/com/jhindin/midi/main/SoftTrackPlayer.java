@@ -17,9 +17,9 @@ class SoftTrackPlayer implements Runnable {
 	PreciseTime tempo = new PreciseTime(500, 0);
 	PreciseTime startTime;
 	
-	PreciseTime tickDuration = new PreciseTime(0, 0);
+	PreciseTime tickDuration = new PreciseTime();
 
-	PreciseTime eventTime = new PreciseTime(0, 0);
+	PreciseTime eventTime = new PreciseTime();
 	
 	SoftTrackPlayer(Receiver receiver, Track track, float division, long resolution,
 			long startTime) {
@@ -39,7 +39,7 @@ class SoftTrackPlayer implements Runnable {
 	}
 	
 	void tickToTime(long tick, PreciseTime time) {
-		PreciseTime i = new PreciseTime(0, 0);
+		PreciseTime i = new PreciseTime();
 		PreciseTime.mult(tickDuration, tick, i);
 		PreciseTime.add(i, startTime, time);
 	}
@@ -63,7 +63,7 @@ class SoftTrackPlayer implements Runnable {
 			tempo.nanos = (newTempo % 1000) * 1000;
 			setTickDuration();
 			{
-				PreciseTime trackDuration = new PreciseTime(0, 0);
+				PreciseTime trackDuration = new PreciseTime();
 				PreciseTime.mult(tickDuration, track.ticks(), trackDuration);
 				System.out.println("track duration " + trackDuration + " for " +
 						track.ticks() + " ticks");

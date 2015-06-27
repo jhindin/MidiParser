@@ -1,6 +1,7 @@
 package com.jhindin.midi;
 
 import java.util.concurrent.CopyOnWriteArrayList;
+import com.jhindin.midi.time.PreciseTime;
 
 public class Sequencer {
 	boolean running = false;
@@ -9,25 +10,40 @@ public class Sequencer {
 	
 	TrackThread trackThreads[];
 	
+	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
+	PreciseTime tickDuration = new PreciseTime();
+	
 	CopyOnWriteArrayList<StateListener> stateListeners = new CopyOnWriteArrayList<>();
 	
-	public Sequencer(Sequence sequence) {
+	public Sequencer(Sequence sequence) throws MidiException {
 		this.sequence = sequence;
 		trackThreads = new TrackThread[sequence.nTracks];
 		for (int i = 0; i < trackThreads.length; i++) {
 			trackThreads[i] = new TrackThread(sequence.tracks[i]);
+		}
+		setTickDuration();
+	}
+
+	void setTickDuration() throws MidiException {
+		if (sequence.divisionMode == Sequence.DivisionMode.PPQ_DIVISION) {
+			PreciseTime.div(quaterNoteDuration, sequence.ticksPerPPQ, tickDuration);
+		} else {
+			throw new MidiException("SMTPE not yet supported");
 		}
 	}
 	
 	public synchronized void start() {
 		running = true;
 		if (sequence.format == 2) {
-			for (int i = 0; i < trackThreads.length; i++) {
-				trackThreads[i].t = new Thread(trackThreads[i]);
-				trackThreads[i].t.start();
+			long currentTime = System.nanoTime();
+			for (TrackThread tt : trackThreads) {
+				tt.startTime = currentTime;
+				tt.t = new Thread(tt);
+				tt.t.start();
 			}
 		} else {
 			currentTrack = 0;
+			trackThreads[currentTrack].startTime = System.nanoTime();
 			trackThreads[currentTrack].t = new Thread(trackThreads[currentTrack]);
 			trackThreads[currentTrack].t.start();
 		}
@@ -43,6 +59,10 @@ public class Sequencer {
 		} else {
 			trackThreads[currentTrack].t = null;
 		}
+	}
+	
+	synchronized boolean getRunning() {
+		return running;
 	}
 	
 	public void addMessageListener(int track, EventListener l) {
@@ -68,6 +88,8 @@ public class Sequencer {
 		int index;
 		Sequence.Track sequenceTrack;
 		
+		long startTime;
+		
 		public TrackThread(Sequence.Track sequenceTrack) {
 			this.sequenceTrack = sequenceTrack;
 		}
@@ -80,18 +102,40 @@ public class Sequencer {
 
 		@Override
 		public void run() {
-			try {
-				MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is);
-				if (event == null)
+			PreciseTime currentTime = new PreciseTime();
+			PreciseTime sequenceTime = new PreciseTime();
+			PreciseTime delta = new PreciseTime();
+			
+			long elapsedTicks = 0;
+			for (;;) {
+				try {
+					MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is);
+					if (event == null)
+						return;
+					
+					PreciseTime.set(currentTime, 0, System.nanoTime() - startTime);
+					elapsedTicks += event.deltaTick;
+					
+					PreciseTime.mult(tickDuration, elapsedTicks, sequenceTime);
+					
+					if (!getRunning())
+						return;
+					
+					if (PreciseTime.greater(sequenceTime, currentTime)) {
+						PreciseTime.substract(sequenceTime, currentTime, delta);
+						wait(delta.millis, delta.nanos);
+						if (!getRunning())
+							return;
+					}
+
+					fireMessageListeners(event);
+					
+				} catch (Exception ex) {
+					for (StateListener l : stateListeners) {
+						l.exceptionRaised(index, ex);
+					}
 					return;
-				
-				fireMessageListeners(event);
-				
-			} catch (Exception ex) {
-				for (StateListener l : stateListeners) {
-					l.exceptionRaised(index, ex);
 				}
-				return;
 			}
 		}
 	}

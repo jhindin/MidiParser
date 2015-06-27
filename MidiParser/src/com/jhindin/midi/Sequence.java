@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 
-import com.jhindin.midi.time.PreciseTime;
-
 public class Sequence {
 	short format, nTracks, division;
 	public enum DivisionMode { PPQ_DIVISION, SMTPE_DIVISION } ;
@@ -15,8 +13,6 @@ public class Sequence {
 	int ticksPerFrame, fps; // for SMTPE division;
 	
 	Track tracks[];
-	
-	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
 	
 	public Sequence(RandomAccessFile raf) throws IOException, MidiException {
 		InputStream fcis = new ChannelInputStream(raf.getChannel());
