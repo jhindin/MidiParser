@@ -75,7 +75,6 @@ public class Sequencer {
 				l.receiveMessage(index, message);
 			}
 		}
-
 	}
 
 	class ParserTrackPlayer implements Runnable {
@@ -98,5 +97,4 @@ public class Sequencer {
 			
 		}
 	}
-
 }
