@@ -10,13 +10,11 @@ import java.io.RandomAccessFile;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Receiver;
-import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
 
 import com.jhindin.midi.parsing.MessageListener;
-import com.jhindin.midi.parsing.MidiParsingSequencer;
 import com.jhindin.midi.parsing.MidiException;
 
 import clioptions.CliOptions;
@@ -72,7 +70,7 @@ public class Main {
 		}
 		
 		try {
-			Sequence sequence = MidiSystem.getSequence(new File(midiFileName));
+			javax.sound.midi.Sequence sequence = MidiSystem.getSequence(new File(midiFileName));
 			System.out.println("File " + midiFileName +" parsed");
 			
 
@@ -94,7 +92,7 @@ public class Main {
 				System.out.println("Play midi with Java parser and custom sequencer");
 				System.out.println("Division type " + sequence.getDivisionType());
 				System.out.println("Resolution " + sequence.getResolution());
-				if (sequence.getDivisionType() == Sequence.PPQ) {
+				if (sequence.getDivisionType() == javax.sound.midi.Sequence.PPQ) {
 					System.out.println("PPQ mode");
 				} else {
 					System.err.println("Division type not yet supported");
@@ -124,7 +122,7 @@ public class Main {
 				break;
 			case PARSE:
 				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r");
-				MidiParsingSequencer mc = new MidiParsingSequencer(raf);
+				com.jhindin.midi.parsing.Sequence mc = new com.jhindin.midi.parsing.Sequence(raf);
 				mc.addMessageListener(0, new MessageListener() {
 					
 					@Override

@@ -7,7 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.jhindin.midi.time.PreciseTime;
 
-public class MidiParsingSequencer {
+public class Sequence {
 	short format, nTracks, division;
 	public enum DivisionMode { PPQ_DIVISION, SMTPE_DIVISION } ;
 	DivisionMode divisionMode;
@@ -22,7 +22,7 @@ public class MidiParsingSequencer {
 	
 	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
 	
-	public MidiParsingSequencer(RandomAccessFile raf) throws IOException, MidiException {
+	public Sequence(RandomAccessFile raf) throws IOException, MidiException {
 		InputStream fcis = new ChannelInputStream(raf.getChannel());
 		parseHeader(fcis);
 		if (format == 2) {
