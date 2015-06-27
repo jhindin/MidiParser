@@ -7,7 +7,9 @@ public class Sequencer {
 	Sequence sequence;
 	int currentTrack = 0;
 	
-	TrackThread trackThreads[]; 
+	TrackThread trackThreads[];
+	
+	CopyOnWriteArrayList<StateListener> stateListeners = new CopyOnWriteArrayList<>();
 	
 	public Sequencer(Sequence sequence) {
 		this.sequence = sequence;
@@ -59,6 +61,8 @@ public class Sequencer {
 		}
 	}
 	
+	
+	
 	class TrackThread implements Runnable{
 		Thread t;
 		Exception exception;
@@ -84,7 +88,9 @@ public class Sequencer {
 					return;
 				
 			} catch (Exception ex) {
-				exception = ex;
+				for (StateListener l : stateListeners) {
+					l.exceptionRaised(index, ex);
+				}
 				return;
 			}
 			
