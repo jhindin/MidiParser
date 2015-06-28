@@ -26,7 +26,7 @@ public class ChannelInputStream extends InputStream {
 			buf.flip();
 		}
 		
-		return buf.get();
+		return buf.get() & 0xff;
 	}
 
 	@Override

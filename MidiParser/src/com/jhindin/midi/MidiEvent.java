@@ -52,7 +52,7 @@ public class MidiEvent {
 
 		switch (status & 0xf0) {
 		case 0xf0:
-			switch (status) {
+			switch ((byte)(status & 0xff)) {
 			case MidiMessage.SYSEX_START:
 			case MidiMessage.SYSEX_ESCAPE:
 				prefix.data[0] = (byte)(status & 0xff);
@@ -97,6 +97,7 @@ public class MidiEvent {
 			default:
 				throw new MidiException("Unexpected event type " + (status & 0xff));
 			}
+			break;
 		case MidiMessage.NOTE_ON:
 		case MidiMessage.NOTE_OFF:
 		case MidiMessage.POLYPHN_PRESSURE:
@@ -134,7 +135,8 @@ public class MidiEvent {
 			if (prefix != null)
 				prefix.data[prefix.pos++] = (byte)(c & 0xff);
 			
-			length |= (c & 0x7f) << ( 24 - i * 8);
+			length <<= 8;
+			length |= (c & 0x7f);
 			if ((c & 0x80) == 0)
 				break;
 		}
