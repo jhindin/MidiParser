@@ -19,7 +19,7 @@ public abstract class MidiMessage {
 	
 	@Override
 	public String toString() {
-		switch (data[0] & 0xf0) {
+		switch ((byte)(data[0] & 0xf0)) {
 		case NOTE_ON:
 			return "Note on: channel " + getChannel(data[0]) + " note " + Byte.toString(data[1]) +
 					" velocity " + Byte.toString(data[2]);
@@ -52,10 +52,10 @@ public abstract class MidiMessage {
 	static final int getChannel(byte b) { return b & 0xf; }
 
 	
-	static final void appendByteArrayAsHex(StringBuilder b, byte data[]) {
-		for (int i = 0; i < data.length; i++) {
-			b.append(Integer.toHexString(data[i] & 0xff));
-			if (i != data.length - 1) {
+	static final void appendByteArrayAsHex(StringBuilder b, byte data[], int offset, int length) {
+		for (int i = 0; i < length; i++) {
+			b.append(Integer.toHexString(data[i + offset] & 0xff));
+			if (i != length - 1) {
 				b.append(" ");
 			}
 		}

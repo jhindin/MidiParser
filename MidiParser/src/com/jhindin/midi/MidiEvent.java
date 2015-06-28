@@ -50,8 +50,8 @@ public class MidiEvent {
 		
 		Prefix prefix = new Prefix();
 
-		switch (status & 0xf0) {
-		case 0xf0:
+		switch ((byte)(status & 0xf0)) {
+		case (byte)0xf0:
 			switch ((byte)(status & 0xff)) {
 			case MidiMessage.SYSEX_START:
 			case MidiMessage.SYSEX_ESCAPE:
@@ -78,6 +78,7 @@ public class MidiEvent {
 
 				prefix.data[0] = (byte)(status & 0xff);
 				prefix.data[1] = (byte)(type & 0xff);
+				prefix.pos = 2;
 				
 				MidiMetaMessage metaMessage = new MidiMetaMessage();
 				
@@ -113,6 +114,7 @@ public class MidiEvent {
 			rc = is.read(m.data, 1, len - 1);
 			if (rc < 0) 
 				throw new MidiException("Unexpected EOF");
+			event.message = m;
 			break;
 		default:
 			throw new MidiException("Unexpected event type " + (status & 0xff));
