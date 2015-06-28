@@ -121,14 +121,39 @@ public class Main {
 				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r");
 				com.jhindin.midi.Sequence mc = new com.jhindin.midi.Sequence(raf);
 				com.jhindin.midi.Sequencer sequencer = new com.jhindin.midi.Sequencer(mc);
-				sequencer.addMessageListener(0, new com.jhindin.midi.EventListener() {
-					
-					@Override
-					public void receiveEvent(int track, com.jhindin.midi.MidiEvent e) {
-						// TODO Auto-generated method stub
+
+				try {
+					final Receiver receiver = MidiSystem.getReceiver();
+					sequencer.addMessageListener(0, new com.jhindin.midi.EventListener() {
 						
-					}
-				});
+						@Override
+						public void receiveEvent(int track, com.jhindin.midi.MidiEvent e) throws Exception {
+							com.jhindin.midi.MidiMessage m = e.getMessage();
+							if (m instanceof com.jhindin.midi.ShortMessage) {
+								javax.sound.midi.ShortMessage sm;
+								switch (m.getBytes().length) {
+								case 1:
+									sm = new javax.sound.midi.ShortMessage(m.getBytes()[0]);
+									break;
+								case 2:
+									sm = new javax.sound.midi.ShortMessage(m.getBytes()[0],
+											m.getBytes()[1], 0);
+									break;
+								case 3:
+									sm = new javax.sound.midi.ShortMessage(m.getBytes()[0],
+											m.getBytes()[1], m.getBytes()[2]);
+									break;
+								default:
+									throw new MidiException("Unexpected message length");
+								}
+								receiver.send(sm, -1);
+							}
+						}
+					});
+					sequencer.start();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 					
 				break;
 			}

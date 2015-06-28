@@ -1,6 +1,6 @@
 package com.jhindin.midi;
 
-public class MidiMessage {
+public abstract class MidiMessage {
 	byte data[];
 
 	public static final byte SYSEX_START      = (byte)0xf0;
@@ -44,8 +44,13 @@ public class MidiMessage {
 			
 		}
 	}
+
+	public final byte[] getBytes() {
+		return data;
+	}
 	
 	static final int getChannel(byte b) { return b & 0xf; }
+
 	
 	static final void appendByteArrayAsHex(StringBuilder b, byte data[]) {
 		for (int i = 0; i < data.length; i++) {

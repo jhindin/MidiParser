@@ -1,6 +1,6 @@
 package com.jhindin.midi;
 
-public class MidiSysexMessage extends MidiMessage {
+public class MidiSysexMessage extends MidiVariableLengthMessage {
 	int status;
 	
 	@Override

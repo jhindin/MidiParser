@@ -94,7 +94,7 @@ public class Sequencer {
 			this.sequenceTrack = sequenceTrack;
 		}
 
-		void fireMessageListeners(MidiEvent event) {
+		void fireMessageListeners(MidiEvent event) throws Exception {
 			for (EventListener l : listeners) {
 				l.receiveEvent(index, event);
 			}

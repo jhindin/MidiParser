@@ -2,7 +2,7 @@ package com.jhindin.midi;
 
 import java.nio.charset.StandardCharsets;
 
-public class MidiMetaMessage extends MidiMessage {
+public class MidiMetaMessage extends MidiVariableLengthMessage {
 	int type;
 
 	public static final int SEQUENCE_NUMBER = 0x00;

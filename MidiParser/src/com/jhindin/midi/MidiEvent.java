@@ -40,41 +40,58 @@ public class MidiEvent {
 		MidiEvent event = new MidiEvent();
 		int rc;
 		
-		event.deltaTick = readVariableLength(is);
+		event.deltaTick = readVariableLength(is, null);
 
 		long length;
 		
 		int status = is.read();
 		if (status < 0) 
 			throw new MidiException("Unexpected EOF");
+		
+		Prefix prefix = new Prefix();
 
 		switch (status & 0xf0) {
 		case 0xf0:
 			switch (status) {
 			case MidiMessage.SYSEX_START:
 			case MidiMessage.SYSEX_ESCAPE:
+				prefix.data[0] = (byte)(status & 0xff);
+				prefix.pos = 1;
+				
 				MidiSysexMessage sysexMesage = new MidiSysexMessage();
-				length = readVariableLength(is);
-				sysexMesage.data = new byte[(int)length];
+				length = readVariableLength(is, prefix);
+				sysexMesage.data = new byte[(int)length + prefix.pos];
 				sysexMesage.status = status;
-				rc = is.read(sysexMesage.data);
+				rc = is.read(sysexMesage.data, prefix.pos, (int)length);
 				if (rc < 0) 
 					throw new MidiException("Unexpected EOF");
+				System.arraycopy(prefix.data, 0, sysexMesage.data, 0, prefix.pos);
+				sysexMesage.dataOffset = prefix.pos;
+
 				event.message = sysexMesage;
 				break;
 			case MidiMessage.META:
+
 				int type = is.read();
 				if (type < 0)
 					throw new MidiException("Unexpected EOF");
+
+				prefix.data[0] = (byte)(status & 0xff);
+				prefix.data[1] = (byte)(type & 0xff);
+				
 				MidiMetaMessage metaMessage = new MidiMetaMessage();
 				
-				length = readVariableLength(is);
+				length = readVariableLength(is, prefix);
 				
 				metaMessage.type = type;
-				metaMessage.data = new byte[(int)length];
-				rc = is.read(metaMessage.data);
+				metaMessage.data = new byte[(int)length + prefix.pos];
+				rc = is.read(metaMessage.data, prefix.pos, (int)length);
 				if (rc < 0) 
 					throw new MidiException("Unexpected EOF");
+
+				System.arraycopy(prefix.data, 0, metaMessage.data, 0, prefix.pos);
+				metaMessage.dataOffset = prefix.pos;
+
 				event.message = metaMessage;
 				break;
 			default:
@@ -88,7 +105,7 @@ public class MidiEvent {
 		case MidiMessage.CHNL_PRESSURE:
 		case MidiMessage.PITCH_BEND:
 			int len = messageLength[(status & 0xf0) >> 4 + 8];
-			MidiMessage m = new MidiMessage();
+			MidiMessage m = new ShortMessage();
 			m.data = new byte[len];
 			m.data[0] = (byte)status;
 			
@@ -103,7 +120,7 @@ public class MidiEvent {
 		return event;
 	}
 
-	static final long readVariableLength(InputStream is)
+	static final long readVariableLength(InputStream is, Prefix prefix)
 			throws IOException, MidiException {
 		int c;
 		int i;
@@ -113,6 +130,9 @@ public class MidiEvent {
 			c = is.read();
 			if (c < 0) 
 				throw new MidiException("Unexpected EOF");
+			
+			if (prefix != null)
+				prefix.data[prefix.pos++] = (byte)(c & 0xff);
 			
 			length |= (c & 0x7f) << ( 24 - i * 8);
 			if ((c & 0x80) == 0)
@@ -125,6 +145,11 @@ public class MidiEvent {
 	@Override
 	public String toString() {
 		return "At " + Long.toString(deltaTick) + ":" + message;
+	}
+	
+	static class Prefix {
+		byte data[] = new byte[6];
+		int pos = 0;
 	}
 	
 }
