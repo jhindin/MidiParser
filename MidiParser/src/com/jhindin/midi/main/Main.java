@@ -13,6 +13,7 @@ import javax.sound.midi.Transmitter;
 
 import com.jhindin.midi.EventListener;
 import com.jhindin.midi.MidiException;
+import com.jhindin.midi.StateListener;
 
 import clioptions.CliOptions;
 import clioptions.exceptions.parsing.ParsingException;
@@ -29,9 +30,10 @@ public class Main {
 		// TODO Auto-generated method stub
 		String midiFileName = null;
 		CliOptions options;
+		final boolean verbose;
 		
 		try {
-			options = new CliOptions("hp:");
+			options = new CliOptions("hp:v");
 			options.parse(args);
 			String rargs[] = options.getRemaningArgs();
 			if (rargs.length == 0) {
@@ -61,6 +63,8 @@ public class Main {
 				usage();
 				return;
 			}
+			
+			verbose = options.isOptionSet("v");
 		} catch (ParsingException ex) {
 			System.err.println("Bad options " + ex);
 			return;
@@ -79,7 +83,9 @@ public class Main {
 					sequencer.open();
 					sequencer.setSequence(sequence);
 					Transmitter t = sequencer.getTransmitter();
-					t.setReceiver(new LogReceiver());
+					if (verbose) 
+						t.setReceiver(new LogReceiver());
+					
 					sequencer.start();
 				} catch (Exception ex) {
 					System.err.println("Playing failed: " + ex);
@@ -129,6 +135,8 @@ public class Main {
 						@Override
 						public void receiveEvent(int track, com.jhindin.midi.MidiEvent e) throws Exception {
 							com.jhindin.midi.MidiMessage m = e.getMessage();
+							if (verbose)
+								System.out.println("Message " + m);
 							if (m instanceof com.jhindin.midi.ShortMessage) {
 								javax.sound.midi.ShortMessage sm;
 								switch (m.getBytes().length) {
@@ -150,6 +158,27 @@ public class Main {
 							}
 						}
 					});
+					
+					sequencer.addStateListener(new StateListener() {
+						
+						@Override
+						public void sequenceStarts(int index) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void sequenceEnds(int index) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void exceptionRaised(int index, Exception ex) {
+							System.err.println("Exception while playing: " + ex);
+							ex.printStackTrace();
+						}
+					});
 					sequencer.start();
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -169,7 +198,8 @@ public class Main {
 
 	static void usage()
 	{
-		System.err.println("MidiParser [-h] [-p java|soft|parse] <midi file>");
+		System.err.println("MidiParser [-hv] [-p java|soft|parse] <midi file>\n" + 
+				"-v   verbose");
 	}
 	
 	static Thread playTrack(Receiver receiver, Track track, float division, long resolution,

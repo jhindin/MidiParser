@@ -80,6 +80,14 @@ public class Sequencer {
 			trackThreads[0].listeners.remove(l);
 		}
 	}
+	
+	public void addStateListener(StateListener l) {
+		stateListeners.add(l);
+	}
+
+	public void removeStateListener(StateListener l) {
+		stateListeners.remove(l);
+	}
 
 	class TrackThread implements Runnable{
 		Thread t;
