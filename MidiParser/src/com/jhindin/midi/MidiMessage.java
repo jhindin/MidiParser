@@ -16,8 +16,6 @@ public abstract class MidiMessage {
 	public static final byte CHNL_PRESSURE    = (byte)0xD0;
 	public static final byte PITCH_BEND       = (byte)0xE0;
 	
-	
-
 	public final byte[] getBytes() {
 		return data;
 	}

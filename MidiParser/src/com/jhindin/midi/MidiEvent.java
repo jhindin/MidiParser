@@ -36,19 +36,27 @@ public class MidiEvent {
 		return message;
 	}
 	
-	public static MidiEvent read(InputStream is)  throws IOException, MidiException {
+	public static MidiEvent read(InputStream is, byte runningStatus)
+			throws IOException, MidiException {
 		MidiEvent event = new MidiEvent();
-		int rc;
 		
 		event.deltaTick = readVariableLength(is, null);
-
-		long length;
 		
 		int status = is.read();
 		if (status < 0) 
 			throw new MidiException("Unexpected EOF");
 		
+		is.mark(1);
+		
+		readMessage(is, event, (byte)status, runningStatus);
+		return event;
+	}
+	
+	static void readMessage(InputStream is, MidiEvent event, byte status, byte runningStatus)
+			throws IOException, MidiException {
 		Prefix prefix = new Prefix();
+		long length;
+		int rc;
 
 		switch ((byte)(status & 0xf0)) {
 		case (byte)0xf0:
@@ -117,10 +125,11 @@ public class MidiEvent {
 			event.message = m;
 			break;
 		default:
-			throw new MidiException("Unexpected event type " + (status & 0xff));
+			if (status == runningStatus) 
+				throw new MidiException("Invalid internal state");
+			is.reset();
+			readMessage(is, event, runningStatus, runningStatus);
 		}
-
-		return event;
 	}
 
 	static final long readVariableLength(InputStream is, Prefix prefix)

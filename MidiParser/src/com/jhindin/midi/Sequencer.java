@@ -113,13 +113,16 @@ public class Sequencer {
 			PreciseTime currentTime = new PreciseTime();
 			PreciseTime sequenceTime = new PreciseTime();
 			PreciseTime delta = new PreciseTime();
+			byte runningStatus = 0;
 			
 			long elapsedTicks = 0;
 			for (;;) {
 				try {
-					MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is);
+					MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is, runningStatus);
 					if (event == null)
 						return;
+					
+					runningStatus = event.message.data[0];
 					
 					PreciseTime.set(currentTime, 0, System.nanoTime() - startTime);
 					elapsedTicks += event.deltaTick;
@@ -131,7 +134,9 @@ public class Sequencer {
 					
 					if (PreciseTime.greater(sequenceTime, currentTime)) {
 						PreciseTime.substract(sequenceTime, currentTime, delta);
-						wait(delta.millis, delta.nanos);
+						synchronized (this) {
+							wait(delta.millis, delta.nanos);
+						}
 						if (!getRunning())
 							return;
 					}
