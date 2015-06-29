@@ -58,6 +58,7 @@ public class ChannelInputStream extends InputStream {
 	public long skip(long n) throws IOException {
 		long pos = fc.position();
 		fc.position(pos + n);
+		buf.clear();
 		return n;
 	}
 
