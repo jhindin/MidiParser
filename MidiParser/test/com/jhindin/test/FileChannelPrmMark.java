@@ -24,42 +24,52 @@ public class FileChannelPrmMark {
 	@Parameters
 	public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                 { 0, 10, 20 },
-                 { 100, 2000, 3000 },   
-                 { 300, 2000, 2000 },  
-                 { 200, 100, 100 },
-                 { 3100, 200, 180 }
+                 { 10240, 0, 10, 20 },
+                 { 10240, 100, 2000, 3000 },   
+                 { 10240, 300, 2000, 2000 },  
+                 { 10240, 200, 100, 100 },
+                 { 10240, 3100, 200, 180 },
+                 { 10240, 10240 - 100, 50, 50 },
+                 { 10240, 10240 - 100, 1000, 50 },
+
+                 { 10250, 0, 10, 20 },
+                 { 10250, 100, 2000, 3000 },   
+                 { 10250, 300, 2000, 2000 },  
+                 { 10250, 200, 100, 100 },
+                 { 10250, 3100, 200, 180 },
+                 { 10250, 10240 - 100, 50, 50 },
+                 { 10250, 10240 - 100, 1000, 50 },
+                 
+                 { 100, 10, 120, 10 },
            });
     }
     
     @Parameter
+	public int sourceSize;
+
+    @Parameter(value = 1)
 	public int offset;
     
-    @Parameter(value = 1)
+    @Parameter(value = 2)
 	public int markLength;
 
-    @Parameter(value = 2)
+    @Parameter(value = 3)
 	public int readAfterLength;
+
     
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-        srcArray = new byte[10240];
-        for (int i = 0; i < 1024; i++) {
-        	System.arraycopy("0123456789".getBytes(), 0, srcArray, i * 10, 10);
-        }
-	}
-
-	@Before
-	public void setUp() throws Exception {
-        bc = new SeekableInMemoryByteChannel(srcArray);
-        is = new ChannelInputStream(bc);
-	}
-
 	@Test
 	public void test() throws IOException {
 		int c;
 		int i = 0;
 		
+        srcArray = new byte[sourceSize];
+        for (i = 0; i < sourceSize/10; i++) {
+        	System.arraycopy("0123456789".getBytes(), 0, srcArray, i * 10, 10);
+        }
+
+        bc = new SeekableInMemoryByteChannel(srcArray);
+        is = new ChannelInputStream(bc);
+
 		for (i = 0; i < offset; i++)
 			is.read();
 		
