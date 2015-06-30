@@ -45,10 +45,11 @@ public class ChannelInputStream extends InputStream {
 				return -1;
 			
 			b = buf.get();
-			saved[savedWritePos++] = b;
 			if (savedWritePos == saved.length) {
 				saved = null;
 				markState = MarkState.EXHAUSTED;
+			} else {
+				saved[savedWritePos++] = b;
 			}
 			return b & 0xff;
 		case RESET_SAVED:
