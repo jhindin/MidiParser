@@ -38,9 +38,13 @@ public class MidiEvent {
 	
 	public static MidiEvent read(InputStream is, byte runningStatus)
 			throws IOException, MidiException {
+
+		long deltaTick = readVariableLength(is, null);
+		if (deltaTick < 0)
+			return null;
+			
 		MidiEvent event = new MidiEvent();
-		
-		event.deltaTick = readVariableLength(is, null);
+		event.deltaTick = deltaTick; 
 		
 		is.mark(1);
 
@@ -69,6 +73,9 @@ public class MidiEvent {
 				
 				MidiSysexMessage sysexMesage = new MidiSysexMessage();
 				length = readVariableLength(is, prefix);
+				if (length < 0)
+					throw new MidiException("Unexpected EOF");
+				
 				sysexMesage.data = new byte[(int)length + prefix.pos];
 				sysexMesage.status = status;
 				rc = is.read(sysexMesage.data, prefix.pos, (int)length);
@@ -95,9 +102,11 @@ public class MidiEvent {
 				
 				metaMessage.type = type;
 				metaMessage.data = new byte[(int)length + prefix.pos];
-				rc = is.read(metaMessage.data, prefix.pos, (int)length);
-				if (rc < 0) 
-					throw new MidiException("Unexpected EOF");
+				if (length > 0) {
+					rc = is.read(metaMessage.data, prefix.pos, (int)length);
+					if (rc < 0) 
+						throw new MidiException("Unexpected EOF");
+				}
 
 				System.arraycopy(prefix.data, 0, metaMessage.data, 0, prefix.pos);
 				metaMessage.dataOffset = prefix.pos;
@@ -142,7 +151,7 @@ public class MidiEvent {
 		for (i = 0; i < 4; i++) {
 			c = is.read();
 			if (c < 0) 
-				throw new MidiException("Unexpected EOF");
+				return -1;
 			
 			if (prefix != null)
 				prefix.data[prefix.pos++] = (byte)(c & 0xff);
