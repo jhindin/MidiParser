@@ -25,8 +25,10 @@ public class FileChannelPrmMark {
 	public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
                  { 0, 10, 20 },
-                 { 100, 2000, 3000 },  
+                 { 100, 2000, 3000 },   
                  { 300, 2000, 2000 },  
+                 { 200, 100, 100 },
+                 { 3100, 200, 180 }
            });
     }
     
