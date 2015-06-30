@@ -4,17 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Vector;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import com.jhindin.midi.ChannelInputStream;
 
@@ -50,7 +40,6 @@ public class FileChannelStreamTest {
 		ByteArrayOutputStream obs = new ByteArrayOutputStream();
 		
 		int c;
-		int i = 0;
 		while ((c = is.read()) != -1) {
 			obs.write((byte)c);
 		}
@@ -62,7 +51,6 @@ public class FileChannelStreamTest {
 	@Test
 	public void shortMarkAndReset() throws IOException {
 		
-		int c;
 		int i = 0;
 		
 		for (i = 0; i < 2000; i++)
