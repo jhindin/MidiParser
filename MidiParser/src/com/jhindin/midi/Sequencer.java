@@ -10,9 +10,6 @@ public class Sequencer {
 	
 	TrackThread trackThreads[];
 	
-	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
-	PreciseTime tickDuration = new PreciseTime();
-	
 	CopyOnWriteArrayList<StateListener> stateListeners = new CopyOnWriteArrayList<>();
 	
 	public Sequencer(Sequence sequence) throws MidiException {
@@ -21,16 +18,8 @@ public class Sequencer {
 		for (int i = 0; i < trackThreads.length; i++) {
 			trackThreads[i] = new TrackThread(sequence.tracks[i]);
 		}
-		setTickDuration();
 	}
 
-	void setTickDuration() throws MidiException {
-		if (sequence.divisionMode == Sequence.DivisionMode.PPQ_DIVISION) {
-			PreciseTime.div(quaterNoteDuration, sequence.ticksPerPPQ, tickDuration);
-		} else {
-			throw new MidiException("SMTPE not yet supported");
-		}
-	}
 	
 	public synchronized void start() {
 		running = true;
@@ -95,6 +84,9 @@ public class Sequencer {
 		CopyOnWriteArrayList<EventListener> listeners = new CopyOnWriteArrayList<>();
 		int index;
 		Sequence.Track sequenceTrack;
+
+		PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
+		PreciseTime tickDuration = new PreciseTime();
 		
 		long startTime;
 		
@@ -120,9 +112,11 @@ public class Sequencer {
 			for (StateListener l : stateListeners) {
 				l.sequenceStarts(index);
 			}
+			
+			try {
+				setTickDuration();
 
-			for (;;) {
-				try {
+				for (;;) {
 					MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is, runningStatus);
 					if (event == null)
 						break;
@@ -146,14 +140,17 @@ public class Sequencer {
 							return;
 					}
 
+					if (event.message.data[0] == (byte)0xff) 
+						processMetaEvent(event);
+					
 					fireMessageListeners(event);
 					
-				} catch (Exception ex) {
-					for (StateListener l : stateListeners) {
-						l.exceptionRaised(index, ex);
-					}
-					return;
 				}
+			}  catch (Exception ex) {
+				for (StateListener l : stateListeners) {
+					l.exceptionRaised(index, ex);
+				}
+				return;
 			}
 			
 			for (StateListener l : stateListeners) {
@@ -161,5 +158,34 @@ public class Sequencer {
 			}
 
 		}
+
+		void setTickDuration()  {
+			if (sequence.divisionMode == Sequence.DivisionMode.PPQ_DIVISION) {
+				PreciseTime.div(quaterNoteDuration, sequence.ticksPerPPQ, tickDuration);
+			} else {
+				throw new Error("SMTPE not yet supported");
+			}
+		}
+
+		void processMetaEvent(MidiEvent event)
+		{
+			MidiMetaMessage message = (MidiMetaMessage)event.message;
+			
+			switch (message.type) {
+			case MidiMetaMessage.TEMPO:
+				long t = ((message.data[message.dataOffset] & 0xff) << 16) |
+						((message.data[message.dataOffset + 1] & 0xff) << 8) |
+						(message.data[message.dataOffset + 2] & 0xff);
+				
+				PreciseTime.set(quaterNoteDuration, t / 1000, 
+						(int)((t % 1000) * 1000));
+				
+				setTickDuration();
+				break;
+			default:
+				break;
+			}
+		}
 	}
+	
 }
