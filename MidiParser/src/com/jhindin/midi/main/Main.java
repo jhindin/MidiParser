@@ -169,8 +169,9 @@ public class Main {
 						
 						@Override
 						public void sequenceEnds(int index) {
-							// TODO Auto-generated method stub
-							
+							try {
+								Thread.sleep(300);
+							} catch (Exception ex) {}
 						}
 						
 						@Override

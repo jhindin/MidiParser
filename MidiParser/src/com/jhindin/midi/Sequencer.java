@@ -116,11 +116,16 @@ public class Sequencer {
 			byte runningStatus = 0;
 			
 			long elapsedTicks = 0;
+
+			for (StateListener l : stateListeners) {
+				l.sequenceStarts(index);
+			}
+
 			for (;;) {
 				try {
 					MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is, runningStatus);
 					if (event == null)
-						return;
+						break;
 					
 					runningStatus = event.message.data[0];
 					
@@ -130,7 +135,7 @@ public class Sequencer {
 					PreciseTime.mult(tickDuration, elapsedTicks, sequenceTime);
 					
 					if (!getRunning())
-						return;
+						break;
 					
 					if (PreciseTime.greater(sequenceTime, currentTime)) {
 						PreciseTime.substract(sequenceTime, currentTime, delta);
@@ -150,6 +155,11 @@ public class Sequencer {
 					return;
 				}
 			}
+			
+			for (StateListener l : stateListeners) {
+				l.sequenceEnds(index);
+			}
+
 		}
 	}
 }
