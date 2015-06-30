@@ -3,10 +3,10 @@ package com.jhindin.midi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 
 public class ChannelInputStream extends InputStream {
-	FileChannel fc;
+	SeekableByteChannel sc;
 	ByteBuffer buf = ByteBuffer.allocate(1024);
 	
 	enum  MarkState { CLEAR, SET_WITHIN_BUFFER, SET_SAVED,
@@ -17,10 +17,10 @@ public class ChannelInputStream extends InputStream {
 	int saveReadPos, savedWritePos;
 	
 	
-	public ChannelInputStream(FileChannel fc) throws IOException {
+	public ChannelInputStream(SeekableByteChannel sc) throws IOException {
 		super();
-		this.fc = fc;
-		fc.read(buf);
+		this.sc = sc;
+		sc.read(buf);
 		buf.flip();
 	}
 
@@ -93,15 +93,15 @@ public class ChannelInputStream extends InputStream {
 
 	@Override
 	public long skip(long n) throws IOException {
-		long pos = fc.position();
-		fc.position(pos + n);
+		long pos = sc.position();
+		sc.position(pos + n);
 		buf.clear();
 		return n;
 	}
 
 	@Override
 	public void close() throws IOException {
-		fc.close();
+		sc.close();
 	}
 
 	@Override
@@ -147,9 +147,13 @@ public class ChannelInputStream extends InputStream {
 				markState = MarkState.EXHAUSTED;
 			
 			buf.clear();
-			int rc = fc.read(buf);
-			buf.flip();
-			return rc;
+			int rc = sc.read(buf);
+			if (rc > 0) {
+				buf.flip();
+				return rc;
+			} else { 
+				return -1;
+			}
 		}
 		return buf.remaining();
 	}
