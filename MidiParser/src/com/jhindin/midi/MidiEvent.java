@@ -42,11 +42,12 @@ public class MidiEvent {
 		
 		event.deltaTick = readVariableLength(is, null);
 		
+		is.mark(1);
+
 		int status = is.read();
 		if (status < 0) 
 			throw new MidiException("Unexpected EOF");
 		
-		is.mark(1);
 		
 		readMessage(is, event, (byte)status, runningStatus);
 		return event;
@@ -114,7 +115,7 @@ public class MidiEvent {
 		case MidiMessage.PROGRAM_CHANGE:
 		case MidiMessage.CHNL_PRESSURE:
 		case MidiMessage.PITCH_BEND:
-			int len = messageLength[(status & 0xf0) >> 4 + 8];
+			int len = messageLength[((status & 0xf0) >> 4) - 8];
 			MidiMessage m = new ShortMessage();
 			m.data = new byte[len];
 			m.data[0] = (byte)status;
