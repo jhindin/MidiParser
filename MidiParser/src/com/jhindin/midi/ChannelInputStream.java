@@ -56,7 +56,7 @@ public class ChannelInputStream extends InputStream {
 		if ((buf.position() + n) < buf.remaining()) 
 			buf.position((int)(buf.position() + n));
 				
-		long pos = sc.position() + buf.position() - buf.capacity();
+		long pos = sc.position() + buf.position() - buf.limit();
 		sc.position(pos + n);
 		buf.limit(0);
 		if (markState == MarkState.SET_WITHIN_BUFFER)
@@ -78,7 +78,7 @@ public class ChannelInputStream extends InputStream {
 		} else {
 			markState = MarkState.SET_POS;
 			try {
-				markPosition = sc.position() + buf.position() - buf.capacity();
+				markPosition = sc.position() + buf.position() - buf.limit();
 			} catch (IOException ex) {
 				markState = MarkState.FAILURE;
 			}
