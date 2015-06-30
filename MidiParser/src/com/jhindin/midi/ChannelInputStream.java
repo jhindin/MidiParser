@@ -29,7 +29,6 @@ public class ChannelInputStream extends InputStream {
 			return -1;
 		
 		return buf.get() & 0xff;
-
 	}
 
 	@Override
@@ -103,7 +102,6 @@ public class ChannelInputStream extends InputStream {
 		case FAILURE:
 			throw new IOException("Mark failed");
 		}
-		
 	}
 
 	@Override
@@ -127,5 +125,4 @@ public class ChannelInputStream extends InputStream {
 		}
 		return buf.remaining();
 	}
-	
 }
