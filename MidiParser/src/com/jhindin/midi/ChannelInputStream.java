@@ -9,13 +9,9 @@ public class ChannelInputStream extends InputStream {
 	SeekableByteChannel sc;
 	ByteBuffer buf = ByteBuffer.allocate(1024);
 	
-	enum  MarkState { CLEAR, SET_WITHIN_BUFFER, SET_SAVED,
-		RESET_WITHIN_BUFFER, RESET_SAVED, EXHAUSTED };
+	enum  MarkState { CLEAR, SET_WITHIN_BUFFER, SET_POS, EXHAUSTED, FAILURE };
 	MarkState markState = MarkState.CLEAR;
-	
-	byte saved[];
-	int saveReadPos, savedWritePos;
-	
+	long markPosition;
 	
 	public ChannelInputStream(SeekableByteChannel sc) throws IOException {
 		super();
@@ -27,40 +23,13 @@ public class ChannelInputStream extends InputStream {
 	@Override
 	public int read() throws IOException {
 		int rc;
-		byte b;
 		
-		switch (markState) {
-		case CLEAR:
-		case RESET_WITHIN_BUFFER:
-		case SET_WITHIN_BUFFER:
-		case EXHAUSTED:
-			rc = readBuf();
-			if (rc < 0)
-				return -1;
-			
-			return buf.get() & 0xff;
-		case SET_SAVED:
-			rc = readBuf();
-			if (rc < 0)
-				return -1;
-			
-			b = buf.get();
-			if (savedWritePos == saved.length) {
-				saved = null;
-				markState = MarkState.EXHAUSTED;
-			} else {
-				saved[savedWritePos++] = b;
-			}
-			return b & 0xff;
-		case RESET_SAVED:
-			b = saved[saveReadPos++];
-			if (saveReadPos == savedWritePos) {
-				saved = null;
-				markState = MarkState.CLEAR;
-			}
-			return b & 0xff;
-		}
-		throw new IOException("Invalid internal state " + markState);
+		rc = readBuf();
+		if (rc < 0)
+			return -1;
+		
+		return buf.get() & 0xff;
+
 	}
 
 	@Override
@@ -70,33 +39,29 @@ public class ChannelInputStream extends InputStream {
 
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
-		switch (markState) {
-		case CLEAR:
-		case RESET_WITHIN_BUFFER:
-		case SET_WITHIN_BUFFER:
-		case EXHAUSTED:
-			int ret = len;
-			do {
-				int rc = readBuf();
-				int bytesToCopy = (rc <= len) ? rc : len;
-				buf.get(b, off, bytesToCopy);
-				off += bytesToCopy;
-				len -= bytesToCopy;
-			} while (len > 0);
-			return ret;
-		case SET_SAVED:
-			return -1;
-		case RESET_SAVED:
-			return -1;
-		}
-		throw new IOException("Invalid internal state " + markState);
+		do {
+			int rc = readBuf();
+			if (rc < 0)
+				return rc;
+
+			int bytesToCopy = (rc <= len) ? rc : len;
+			buf.get(b, off, bytesToCopy);
+			off += bytesToCopy;
+			len -= bytesToCopy;
+		} while (len > 0);
+		return len;
 	}
 
 	@Override
 	public long skip(long n) throws IOException {
-		long pos = sc.position();
+		if ((buf.position() + n) < buf.remaining()) 
+			buf.position((int)(buf.position() + n));
+				
+		long pos = sc.position() + buf.position() - buf.capacity();
 		sc.position(pos + n);
-		buf.clear();
+		buf.limit(0);
+		if (markState == MarkState.SET_WITHIN_BUFFER)
+			markState = MarkState.EXHAUSTED;
 		return n;
 	}
 
@@ -112,9 +77,12 @@ public class ChannelInputStream extends InputStream {
 			markState = MarkState.SET_WITHIN_BUFFER;
 			buf.mark();
 		} else {
-			markState = MarkState.SET_SAVED;
-			saved = new byte[readlimit];
-			saveReadPos = savedWritePos = 0;;
+			markState = MarkState.SET_POS;
+			try {
+				markPosition = sc.position() + buf.position() - buf.capacity();
+			} catch (IOException ex) {
+				markState = MarkState.FAILURE;
+			}
 		}
 	}
 
@@ -126,13 +94,14 @@ public class ChannelInputStream extends InputStream {
 		case EXHAUSTED:
 			throw new IOException("Resetting beyond mark read limit");
 		case SET_WITHIN_BUFFER:
-		case RESET_WITHIN_BUFFER:
 			buf.reset();
 			break;
-		case SET_SAVED:
-		case RESET_SAVED:
-			saveReadPos = 0;
+		case SET_POS:
+			sc.position(markPosition);
+			buf.limit(0);
 			break;
+		case FAILURE:
+			throw new IOException("Mark failed");
 		}
 		
 	}
