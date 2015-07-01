@@ -11,7 +11,6 @@ import javax.sound.midi.Sequencer;
 import javax.sound.midi.Track;
 import javax.sound.midi.Transmitter;
 
-import com.jhindin.midi.EventListener;
 import com.jhindin.midi.MidiException;
 import com.jhindin.midi.StateListener;
 

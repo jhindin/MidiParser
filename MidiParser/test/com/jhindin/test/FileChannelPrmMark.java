@@ -59,7 +59,6 @@ public class FileChannelPrmMark {
     
 	@Test
 	public void test() throws IOException {
-		int c;
 		int i = 0;
 		
         srcArray = new byte[sourceSize];
