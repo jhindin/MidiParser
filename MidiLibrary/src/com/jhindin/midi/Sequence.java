@@ -20,18 +20,19 @@ public class Sequence {
 		if (format == 2) {
 			tracks = new Track[nTracks];
 			
-			tracks[0] = new Track(0, StreamChunk.getChunk(fcis));
+			tracks[0] = new Track(0, TrackStreamChunk.getChunk(fcis));
 			long pos = raf.getFilePointer();
 			pos += tracks[0].chunk.length + 8;
 			raf.seek(pos);
 		
 			for (int i = 1; i < nTracks; i++) {
-				tracks[i] = new Track(i, StreamChunk.getChunk(new ChannelInputStream(raf.getChannel())));
+				tracks[i] = new Track(i, TrackStreamChunk.getChunk(new ChannelInputStream(raf.getChannel())));
 				pos += tracks[i].chunk.length + 8;
 				raf.seek(pos);
 			}
 		} else {
-			setupSingleTrack(fcis);
+			tracks = new Track[1];
+			tracks[0] = new Track(0, TrackStreamChunk.getChunk(fcis));
 		}
 	}
 	
@@ -58,11 +59,6 @@ public class Sequence {
 			ticksPerFrame = division & 0xff;
 			fps = division & 0x7f00;
 		}
-	}
-	
-	void setupSingleTrack(InputStream is) throws IOException, MidiException {
-		tracks = new Track[1];
-		tracks[0] = new Track(0, StreamChunk.getChunk(is));
 	}
 	
 	public int getFormat() {
@@ -98,9 +94,9 @@ public class Sequence {
 	
 	class Track {
 		int index;
-		StreamChunk chunk;
+		TrackStreamChunk chunk;
 		
-		Track(int index, StreamChunk chunk) {
+		Track(int index, TrackStreamChunk chunk) {
 			this.index = index;
 			this.chunk = chunk;
 		}

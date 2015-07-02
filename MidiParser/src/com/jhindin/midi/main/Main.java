@@ -161,13 +161,13 @@ public class Main {
 					sequencer.addStateListener(new StateListener() {
 						
 						@Override
-						public void sequenceStarts(int index) {
+						public void sequenceStarts() {
 							// TODO Auto-generated method stub
 							
 						}
 						
 						@Override
-						public void sequenceEnds(int index) {
+						public void sequenceEnds() {
 							try {
 								Thread.sleep(300);
 							} catch (Exception ex) {}
@@ -177,6 +177,18 @@ public class Main {
 						public void exceptionRaised(int index, Exception ex) {
 							System.err.println("Exception while playing: " + ex);
 							ex.printStackTrace();
+						}
+
+						@Override
+						public void trackStarts(int index) {
+							// TODO Auto-generated method stub
+							
+						}
+
+						@Override
+						public void trackEnds(int index) {
+							// TODO Auto-generated method stub
+							
 						}
 					});
 					sequencer.start();

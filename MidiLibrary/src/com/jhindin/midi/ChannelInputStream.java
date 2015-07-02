@@ -38,6 +38,7 @@ public class ChannelInputStream extends InputStream {
 
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
+		int leftToCopy = len;
 		do {
 			int rc = readBuf();
 			if (rc < 0)
@@ -46,8 +47,8 @@ public class ChannelInputStream extends InputStream {
 			int bytesToCopy = (rc <= len) ? rc : len;
 			buf.get(b, off, bytesToCopy);
 			off += bytesToCopy;
-			len -= bytesToCopy;
-		} while (len > 0);
+			leftToCopy -= bytesToCopy;
+		} while (leftToCopy > 0);
 		return len;
 	}
 

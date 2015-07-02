@@ -1,7 +1,6 @@
 package com.jhindin.midi;
 
 import java.util.concurrent.CopyOnWriteArrayList;
-import com.jhindin.midi.time.PreciseTime;
 
 public class Sequencer {
 	boolean running = false;
@@ -14,9 +13,14 @@ public class Sequencer {
 	
 	public Sequencer(Sequence sequence) throws MidiException {
 		this.sequence = sequence;
-		trackThreads = new TrackThread[sequence.nTracks];
-		for (int i = 0; i < trackThreads.length; i++) {
-			trackThreads[i] = new TrackThread(sequence.tracks[i]);
+		if (sequence.format == 2) { 
+			trackThreads = new TrackThread[sequence.nTracks];
+			for (int i = 0; i < trackThreads.length; i++) {
+				trackThreads[i] = new TrackThread(this, sequence.tracks[i]);
+			}
+		} else {
+			trackThreads = new TrackThread[1];
+			trackThreads[0] = new TrackThread(this, sequence.tracks[0]);
 		}
 	}
 
@@ -77,114 +81,18 @@ public class Sequencer {
 	public void removeStateListener(StateListener l) {
 		stateListeners.remove(l);
 	}
-
-	class TrackThread implements Runnable{
-		Thread t;
-		Exception exception;
-		CopyOnWriteArrayList<EventListener> listeners = new CopyOnWriteArrayList<>();
-		int index;
-		Sequence.Track sequenceTrack;
-
-		PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
-		PreciseTime tickDuration = new PreciseTime();
-		
-		long startTime;
-		
-		public TrackThread(Sequence.Track sequenceTrack) {
-			this.sequenceTrack = sequenceTrack;
-		}
-
-		void fireMessageListeners(MidiEvent event) throws Exception {
-			for (EventListener l : listeners) {
-				l.receiveEvent(index, event);
-			}
-		}
-
-		@Override
-		public void run() {
-			PreciseTime currentTime = new PreciseTime();
-			PreciseTime sequenceTime = new PreciseTime();
-			PreciseTime delta = new PreciseTime();
-			byte runningStatus = 0;
-			
-			long elapsedTicks = 0;
-
-			for (StateListener l : stateListeners) {
-				l.sequenceStarts(index);
-			}
-			
-			try {
-				setTickDuration();
-
-				for (;;) {
-					MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is, runningStatus);
-					if (event == null)
-						break;
-					
-					runningStatus = event.message.data[0];
-					
-					PreciseTime.set(currentTime, 0, System.nanoTime() - startTime);
-					elapsedTicks += event.deltaTick;
-					
-					PreciseTime.mult(tickDuration, elapsedTicks, sequenceTime);
-					
-					if (!getRunning())
-						break;
-					
-					if (PreciseTime.greater(sequenceTime, currentTime)) {
-						PreciseTime.substract(sequenceTime, currentTime, delta);
-						synchronized (this) {
-							wait(delta.millis, delta.nanos);
-						}
-						if (!getRunning())
-							return;
-					}
-
-					if (event.message.data[0] == (byte)0xff) 
-						processMetaEvent(event);
-					
-					fireMessageListeners(event);
-					
-				}
-			}  catch (Exception ex) {
-				for (StateListener l : stateListeners) {
-					l.exceptionRaised(index, ex);
-				}
-				return;
-			}
-			
-			for (StateListener l : stateListeners) {
-				l.sequenceEnds(index);
-			}
-
-		}
-
-		void setTickDuration()  {
-			if (sequence.divisionMode == Sequence.DivisionMode.PPQ_DIVISION) {
-				PreciseTime.div(quaterNoteDuration, sequence.ticksPerPPQ, tickDuration);
-			} else {
-				throw new Error("SMTPE not yet supported");
-			}
-		}
-
-		void processMetaEvent(MidiEvent event)
-		{
-			MidiMetaMessage message = (MidiMetaMessage)event.message;
-			
-			switch (message.type) {
-			case MidiMetaMessage.TEMPO:
-				long t = ((message.data[message.dataOffset] & 0xff) << 16) |
-						((message.data[message.dataOffset + 1] & 0xff) << 8) |
-						(message.data[message.dataOffset + 2] & 0xff);
-				
-				PreciseTime.set(quaterNoteDuration, t / 1000, 
-						(int)((t % 1000) * 1000));
-				
-				setTickDuration();
-				break;
-			default:
-				break;
-			}
+	
+	public Sequence.Track nextTrack() {
+		switch (sequence.format) {
+		case 0:
+		case 2:
+			return null;
+		case 1:
+			if (currentTrack == sequence.nTracks)
+				return null;
+			return sequence.tracks[++currentTrack];
+		default:
+			return null;
 		}
 	}
 	
