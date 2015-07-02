@@ -25,12 +25,12 @@ public class Main {
 
 	static enum  PlayMode { JAVA, SOFT, PARSE };
 	static PlayMode playMode;
+	static boolean verbose;
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		String midiFileName = null;
 		CliOptions options;
-		final boolean verbose;
 		
 		try {
 			options = new CliOptions("hp:v");

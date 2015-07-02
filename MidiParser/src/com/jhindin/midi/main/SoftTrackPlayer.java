@@ -79,7 +79,8 @@ class SoftTrackPlayer implements Runnable {
 				if ((messageBytes[0] & 0xff) == ShortMessage.SYSTEM_RESET) {
 					processMetaEvent(messageBytes);
 				}
-				//System.out.println("Event at " + event.getTick() + " ticks: " + Printout.eventToString(event));
+				if (Main.verbose)
+					System.out.println(Printout.eventToString(event));
 				tickToTime(event.getTick(), eventTime);
 				sleepTillTime(eventTime);
 				receiver.send(event.getMessage(), 0);

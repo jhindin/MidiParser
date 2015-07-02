@@ -24,7 +24,7 @@ public class Sequence implements Iterable<Track>{
 
 		tracks = new Track[nTracks];
 
-		for (int i = 1; i < nTracks; i++) {
+		for (int i = 0; i < nTracks; i++) {
 			tracks[i] = new Track(i, TrackStreamChunk.getChunk(is));
 		}
 	}

@@ -39,6 +39,7 @@ class TrackThread implements Runnable {
 
 	@Override
 	public void run() {
+		setTickDuration();
 		if (trackToPlay != null) {
 			playTrack(trackToPlay);
 		} else {
