@@ -3,7 +3,6 @@ package com.jhindin.midi;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Iterator;
 
