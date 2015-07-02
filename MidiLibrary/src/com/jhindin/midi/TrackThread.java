@@ -13,16 +13,22 @@ class TrackThread implements Runnable {
 	Exception exception;
 	CopyOnWriteArrayList<EventListener> listeners = new CopyOnWriteArrayList<>();
 	int index;
-	Sequence.Track sequenceTrack;
+	Track trackToPlay;
 
 	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
 	PreciseTime tickDuration = new PreciseTime();
 	
 	long startTime;
 	
-	public TrackThread(Sequencer sequencer, Sequence.Track sequenceTrack) {
+	public TrackThread(Sequencer sequencer, Track track) {
+		// Format 2 - play given track
 		this.sequencer = sequencer;
-		this.sequenceTrack = sequenceTrack;
+		this.trackToPlay = track;
+	}
+
+	public TrackThread(Sequencer sequencer) {
+		// Format 0 and 1 - play tracks in succession
+		this.sequencer = sequencer;
 	}
 	
 	void fireMessageListeners(MidiEvent event) throws Exception {
@@ -33,10 +39,20 @@ class TrackThread implements Runnable {
 
 	@Override
 	public void run() {
+		if (trackToPlay != null) {
+			playTrack(trackToPlay);
+		} else {
+			for (Track track : sequencer.getSequence()) {
+				playTrack(track);
+			}
+		}
+		
+	}
+	
+	void playTrack(Track track) {
 		PreciseTime currentTime = new PreciseTime();
 		PreciseTime sequenceTime = new PreciseTime();
 		PreciseTime delta = new PreciseTime();
-		byte runningStatus = 0;
 		
 		long elapsedTicks = 0;
 
@@ -45,27 +61,7 @@ class TrackThread implements Runnable {
 		}
 		
 		try {
-			setTickDuration();
-
-			for (;;) {
-				MidiEvent event = MidiEvent.read(sequenceTrack.chunk.is, runningStatus);
-				while (event == null) {
-					for (StateListener l : this.sequencer.stateListeners) {
-						l.trackEnds(index);
-					}
-
-					sequenceTrack = sequencer.nextTrack();
-					if (sequenceTrack == null)
-						break;
-					
-					elapsedTicks = 0;
-					runningStatus = 0;
-					PreciseTime.set(quaterNoteDuration, 500, 0);
-					event = MidiEvent.read(sequenceTrack.chunk.is, runningStatus);
-				}
-					
-				
-				runningStatus = event.message.data[0];
+			for (MidiEvent event : track) {
 				
 				PreciseTime.set(currentTime, 0, System.nanoTime() - startTime);
 				elapsedTicks += event.deltaTick;

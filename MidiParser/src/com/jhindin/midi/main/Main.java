@@ -1,8 +1,9 @@
 package com.jhindin.midi.main;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.InputStream;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
@@ -123,8 +124,8 @@ public class Main {
 				}
 				break;
 			case PARSE:
-				RandomAccessFile raf = new RandomAccessFile(new File(midiFileName), "r");
-				com.jhindin.midi.Sequence mc = new com.jhindin.midi.Sequence(raf);
+				InputStream is = new FileInputStream(new File(midiFileName));
+				com.jhindin.midi.Sequence mc = new com.jhindin.midi.Sequence(is);
 				com.jhindin.midi.Sequencer sequencer = new com.jhindin.midi.Sequencer(mc);
 
 				try {

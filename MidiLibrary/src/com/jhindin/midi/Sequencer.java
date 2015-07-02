@@ -5,6 +5,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Sequencer {
 	boolean running = false;
 	Sequence sequence;
+
 	int currentTrack = 0;
 	
 	TrackThread trackThreads[];
@@ -20,8 +21,12 @@ public class Sequencer {
 			}
 		} else {
 			trackThreads = new TrackThread[1];
-			trackThreads[0] = new TrackThread(this, sequence.tracks[0]);
+			trackThreads[0] = new TrackThread(this);
 		}
+	}
+
+	public Sequence getSequence() {
+		return sequence;
 	}
 
 	
@@ -82,7 +87,7 @@ public class Sequencer {
 		stateListeners.remove(l);
 	}
 	
-	public Sequence.Track nextTrack() {
+	public Track nextTrack() {
 		switch (sequence.format) {
 		case 0:
 		case 2:

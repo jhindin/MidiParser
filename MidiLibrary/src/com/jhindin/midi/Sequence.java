@@ -1,10 +1,13 @@
 package com.jhindin.midi;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
+import java.util.Iterator;
 
-public class Sequence {
+public class Sequence implements Iterable<Track>{
 	short format, nTracks, division;
 	public enum DivisionMode { PPQ_DIVISION, SMTPE_DIVISION } ;
 	DivisionMode divisionMode;
@@ -14,25 +17,16 @@ public class Sequence {
 	
 	Track tracks[];
 	
-	public Sequence(RandomAccessFile raf) throws IOException, MidiException {
-		InputStream fcis = new ChannelInputStream(raf.getChannel());
-		parseHeader(fcis);
-		if (format == 2) {
-			tracks = new Track[nTracks];
-			
-			tracks[0] = new Track(0, TrackStreamChunk.getChunk(fcis));
-			long pos = raf.getFilePointer();
-			pos += tracks[0].chunk.length + 8;
-			raf.seek(pos);
+	public Sequence(InputStream is) throws IOException, MidiException {
+		if (!is.markSupported()) 
+			is = new BufferedInputStream(is);
 		
-			for (int i = 1; i < nTracks; i++) {
-				tracks[i] = new Track(i, TrackStreamChunk.getChunk(new ChannelInputStream(raf.getChannel())));
-				pos += tracks[i].chunk.length + 8;
-				raf.seek(pos);
-			}
-		} else {
-			tracks = new Track[1];
-			tracks[0] = new Track(0, TrackStreamChunk.getChunk(fcis));
+		parseHeader(is);
+
+		tracks = new Track[nTracks];
+
+		for (int i = 1; i < nTracks; i++) {
+			tracks[i] = new Track(i, TrackStreamChunk.getChunk(is));
 		}
 	}
 	
@@ -88,18 +82,10 @@ public class Sequence {
 	short bytes2Short(byte raw[], int offset) {
 		return (short)(((raw[offset] & 0xff) << 8) | (raw[offset + 1] & 0xff));
 	}
-	
 
-
-	
-	class Track {
-		int index;
-		TrackStreamChunk chunk;
-		
-		Track(int index, TrackStreamChunk chunk) {
-			this.index = index;
-			this.chunk = chunk;
-		}
+	@Override
+	public Iterator<Track> iterator() {
+		return Arrays.asList(tracks).iterator();
 	}
 
 }
