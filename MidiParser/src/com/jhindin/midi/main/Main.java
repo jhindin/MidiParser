@@ -26,6 +26,7 @@ public class Main {
 	static enum  PlayMode { JAVA, SOFT, PARSE };
 	static PlayMode playMode;
 	static boolean verbose;
+	static boolean dump;
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -33,7 +34,7 @@ public class Main {
 		CliOptions options;
 		
 		try {
-			options = new CliOptions("hp:v");
+			options = new CliOptions("hp:vd");
 			options.parse(args);
 			String rargs[] = options.getRemaningArgs();
 			if (rargs.length == 0) {
@@ -65,6 +66,7 @@ public class Main {
 			}
 			
 			verbose = options.isOptionSet("v");
+			dump = options.isOptionSet("d");
 		} catch (ParsingException ex) {
 			System.err.println("Bad options " + ex);
 			return;
@@ -212,7 +214,8 @@ public class Main {
 	static void usage()
 	{
 		System.err.println("MidiParser [-hv] [-p java|soft|parse] <midi file>\n" + 
-				"-v   verbose");
+				"-v   verbose\n" +
+				"-d   dump events");
 	}
 	
 	static Thread playTrack(Receiver receiver, Track track, float division, long resolution,
