@@ -20,7 +20,7 @@ public class Utils {
 			if (prefix != null)
 				prefix.data[prefix.pos++] = (byte)(c & 0xff);
 			
-			length <<= 8;
+			length <<= 7;
 			length |= (c & 0x7f);
 			if ((c & 0x80) == 0)
 				break;
