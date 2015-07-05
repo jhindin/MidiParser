@@ -15,7 +15,7 @@ public class Sequencer {
 	public Sequencer(Sequence sequence) throws MidiException {
 		this.sequence = sequence;
 		if (sequence.format == 2) { 
-			trackThreads = new TrackThread[sequence.nTracks];
+			trackThreads = new TrackThread[sequence.tracks.length];
 			for (int i = 0; i < trackThreads.length; i++) {
 				trackThreads[i] = new TrackThread(this, sequence.tracks[i]);
 			}
@@ -93,7 +93,7 @@ public class Sequencer {
 		case 2:
 			return null;
 		case 1:
-			if (currentTrack == sequence.nTracks)
+			if (currentTrack == sequence.tracks.length)
 				return null;
 			return sequence.tracks[++currentTrack];
 		default:
