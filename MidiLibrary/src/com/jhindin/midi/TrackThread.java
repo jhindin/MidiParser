@@ -39,7 +39,9 @@ class TrackThread implements Runnable {
 
 	@Override
 	public void run() {
-		setTickDuration();
+		if (sequencer.sequence.divisionMode == Sequence.DivisionMode.PPQ_DIVISION)
+			PreciseTime.div(quaterNoteDuration,sequencer.sequence.resolution, tickDuration);
+
 		if (trackToPlay != null) {
 			playTrack(trackToPlay);
 		} else {
@@ -95,13 +97,7 @@ class TrackThread implements Runnable {
 		}
 	}
 
-	void setTickDuration()  {
-		if (this.sequencer.sequence.divisionMode == Sequence.DivisionMode.PPQ_DIVISION) {
-			PreciseTime.div(quaterNoteDuration, this.sequencer.sequence.ticksPerPPQ, tickDuration);
-		} else {
-			throw new Error("SMTPE not yet supported");
-		}
-	}
+	
 
 	void processMetaEvent(MidiEvent event)
 	{
@@ -109,14 +105,9 @@ class TrackThread implements Runnable {
 		
 		switch (message.type) {
 		case MidiMetaMessage.TEMPO:
-			long t = ((message.data[message.dataOffset] & 0xff) << 16) |
-					((message.data[message.dataOffset + 1] & 0xff) << 8) |
-					(message.data[message.dataOffset + 2] & 0xff);
-			
-			PreciseTime.set(quaterNoteDuration, t / 1000, 
-					(int)((t % 1000) * 1000));
-			
-			setTickDuration();
+			Utils.tempoToQuaterNoteLength(message, quaterNoteDuration);
+			if (sequencer.sequence.divisionMode == Sequence.DivisionMode.PPQ_DIVISION)
+				PreciseTime.div(quaterNoteDuration, sequencer.sequence.resolution, tickDuration);
 			break;
 		default:
 			break;

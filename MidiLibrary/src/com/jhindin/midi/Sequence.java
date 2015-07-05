@@ -10,6 +10,7 @@ public class Sequence implements Iterable<Track>{
 	short format, division;
 	public enum DivisionMode { PPQ_DIVISION, SMTPE_DIVISION };
 	DivisionMode divisionMode;
+	long tickLength;
 
 	public static final float PPQ          = 0.0f;
 	public static final float SMPTE_24     = 24.0f;
@@ -17,7 +18,7 @@ public class Sequence implements Iterable<Track>{
 	public static final float SMPTE_30     = 30.0f;
     public static final float SMPTE_30DROP = 29.97f;
     
-	short ticksPerPPQ; // for PPQ division
+	short resolution; // for PPQ division
 	int ticksPerFrame, fps; // for SMTPE division;
 	
 	Track tracks[];
@@ -26,7 +27,7 @@ public class Sequence implements Iterable<Track>{
 		format = 0;
 		division = 0;
 		divisionMode = DivisionMode.PPQ_DIVISION;
-		ticksPerPPQ = 0;
+		resolution = 0;
 		ticksPerFrame = 0;
 		fps = 0;
 	}
@@ -41,7 +42,17 @@ public class Sequence implements Iterable<Track>{
 		tracks = new Track[context.nTracks];
 
 		for (int i = 0; i < context.nTracks; i++) {
-			tracks[i] = new Track(i, TrackStreamChunk.getChunk(is));
+			tracks[i] = new Track(this, i, TrackStreamChunk.getChunk(is));
+		}
+		
+		if (format == 2) {
+			for (Track t : tracks) {
+				tickLength = Math.max(tickLength, t.getTickLength());
+			}
+		} else {
+			for (Track t : tracks) {
+				tickLength += t.getTickLength();
+			}
 		}
 	}
 	
@@ -62,7 +73,7 @@ public class Sequence implements Iterable<Track>{
 		division = bytes2Short(header.body, 4);
 		if ((division & 0x8000) == 0) {
 			divisionMode = DivisionMode.PPQ_DIVISION;
-			ticksPerPPQ = division;
+			resolution = division;
 		} else {
 			divisionMode = DivisionMode.SMTPE_DIVISION;
 			ticksPerFrame = division & 0xff;
@@ -97,8 +108,8 @@ public class Sequence implements Iterable<Track>{
 		}
 	}
 
-	public short getTicksPerPPQ() {
-		return ticksPerPPQ;
+	public short getResolution() {
+		return resolution;
 	}
 
 	public int getTicksPerFrame() {
@@ -125,6 +136,24 @@ public class Sequence implements Iterable<Track>{
 	
 	protected class ParsingContext {
 		int nTracks = 0;
+	}
+	
+	public long getTickLength() {
+		return tickLength;
+	}
+	
+	public long getMicrosecondLength() {
+		long microSecondLength = 0;
+		if (format == 2) {
+			for (Track t : tracks) {
+				microSecondLength = Math.max(microSecondLength, t.getMicroSecondLength());
+			}
+		} else {
+			for (Track t : tracks) {
+				microSecondLength += t.getMicroSecondLength();
+			}
+		}
+		return microSecondLength;
 	}
 
 }

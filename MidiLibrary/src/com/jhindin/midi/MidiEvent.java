@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 public class MidiEvent {
 	long deltaTick;
+	long tick;
 	MidiMessage message;
 
 	public MidiEvent(long deltaTick, MidiMessage message) {
@@ -14,6 +15,7 @@ public class MidiEvent {
 	
 	public MidiEvent() {
 		deltaTick = -1;
+		tick = 0;
 		message = null;
 	}
 
@@ -21,11 +23,15 @@ public class MidiEvent {
 		return deltaTick;
 	}
 
+	public long getTick() {
+		return tick;
+	}
+
 	public MidiMessage getMessage() {
 		return message;
 	}
 	
-	public static MidiEvent read(InputStream is, byte runningStatus)
+	public static MidiEvent read(InputStream is, ParsingContext context)
 			throws IOException, MidiException {
 
 		long deltaTick = Utils.readVariableLength(is, null);
@@ -33,7 +39,8 @@ public class MidiEvent {
 			return null;
 			
 		MidiEvent event = new MidiEvent();
-		event.deltaTick = deltaTick; 
+		event.deltaTick = deltaTick;
+		context.ticks = event.tick = context.ticks + event.deltaTick;
 		
 		is.mark(1);
 
@@ -42,12 +49,17 @@ public class MidiEvent {
 			throw new MidiException("Unexpected EOF");
 		
 		
-		event.message = MidiMessage.read(is, (byte)status, runningStatus);
+		event.message = MidiMessage.read(is, (byte)status, context);
 		return event;
 	}
 
 	@Override
 	public String toString() {
 		return "At " + Long.toString(deltaTick) + ":" + message;
+	}
+	
+	public static class ParsingContext {
+		byte runningStatus = 0;
+		long ticks = 0;
 	}
 }

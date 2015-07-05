@@ -14,7 +14,7 @@ public class Printout {
 			com.jhindin.midi.MidiMessage jm = 
 				com.jhindin.midi.MidiMessage.read(
 						new ByteArrayInputStream(msgBytes, 1, msgBytes.length -1),
-						msgBytes[0], (byte)0);
+						msgBytes[0], null);
 						
 			return jm.toString();
 		} catch (Exception ex) {
@@ -28,7 +28,7 @@ public class Printout {
 			com.jhindin.midi.MidiMessage jm = 
 				com.jhindin.midi.MidiMessage.read(
 						new ByteArrayInputStream(msgBytes, 1, msgBytes.length -1),
-						msgBytes[0], (byte)0);
+						msgBytes[0], null);
 						
 			com.jhindin.midi.MidiEvent jev = new com.jhindin.midi.MidiEvent(ev.getTick(), jm);
 			return jev.toString();

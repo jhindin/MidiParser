@@ -22,7 +22,8 @@ public class CompareParse {
 	@Parameters
 	public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-        		{ "../MidiParser/ants.mid" }
+        		{ "../MidiParser/ants.mid" }, 
+        		{ "../MidiParser/kesha-take-it-off.mid" }
         });
 	}
 	
@@ -39,6 +40,9 @@ public class CompareParse {
 		assertEquals(bseq.getTracks().length, jseq.getTracks().length);
 
 		assertEquals(bseq.getDivisionType(), jseq.getDivisionType(), 0.0);
+		assertEquals(bseq.getResolution(), jseq.getResolution());
+		assertEquals(bseq.getTickLength(), jseq.getTickLength());
+		assertEquals(bseq.getMicrosecondLength(), jseq.getMicrosecondLength());
 		
 		for (int i = 0; i < bseq.getTracks().length; i++) {
 			com.jhindin.midi.Track jTrack = jseq.getTracks()[i];

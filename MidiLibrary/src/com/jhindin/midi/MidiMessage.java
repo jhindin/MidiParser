@@ -47,7 +47,7 @@ public abstract class MidiMessage {
 		}
 	}
 	
-	public static MidiMessage read(InputStream is,  byte status, byte runningStatus)
+	public static MidiMessage read(InputStream is,  byte status, MidiEvent.ParsingContext context)
 			throws IOException, MidiException {
 		Utils.Prefix prefix = new Utils.Prefix();
 		long length;
@@ -74,6 +74,7 @@ public abstract class MidiMessage {
 				System.arraycopy(prefix.data, 0, sysexMesage.data, 0, prefix.pos);
 				sysexMesage.dataOffset = prefix.pos;
 
+				context.runningStatus = status;
 				return sysexMesage;
 			case MidiMessage.META:
 
@@ -100,6 +101,7 @@ public abstract class MidiMessage {
 				System.arraycopy(prefix.data, 0, metaMessage.data, 0, prefix.pos);
 				metaMessage.dataOffset = prefix.pos;
 
+				context.runningStatus = status;
 				return metaMessage;
 			default:
 				throw new MidiException("Unexpected event type " + (status & 0xff));
@@ -119,12 +121,18 @@ public abstract class MidiMessage {
 			rc = is.read(m.data, 1, len - 1);
 			if (rc < 0) 
 				throw new MidiException("Unexpected EOF");
+			context.runningStatus = status;
 			return m;
 		default:
-			if (status == runningStatus) 
-				throw new MidiException("Invalid internal state");
-			is.reset();
-			return read(is, runningStatus, runningStatus);
+			if (context != null) {
+				if (status == context.runningStatus) 
+					throw new MidiException("Invalid internal state");
+				is.reset();
+				return read(is, context.runningStatus, context);
+			} else {
+				throw new MidiException("Unexpected status "
+						+ Integer.toHexString(status));
+			}
 		}
 	}
 
