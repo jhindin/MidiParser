@@ -8,21 +8,14 @@ public class Sequencer {
 
 	int currentTrack = 0;
 	
-	TrackThread trackThreads[];
+	PlayThread playThread;
 	
 	CopyOnWriteArrayList<StateListener> stateListeners = new CopyOnWriteArrayList<>();
 	
 	public Sequencer(Sequence sequence) throws MidiException {
 		this.sequence = sequence;
-		if (sequence.format == 2) { 
-			trackThreads = new TrackThread[sequence.tracks.length];
-			for (int i = 0; i < trackThreads.length; i++) {
-				trackThreads[i] = new TrackThread(this, sequence.tracks[i]);
-			}
-		} else {
-			trackThreads = new TrackThread[1];
-			trackThreads[0] = new TrackThread(this);
-		}
+		playThread = new PlayThread(this);
+		
 	}
 
 	public Sequence getSequence() {
@@ -32,31 +25,13 @@ public class Sequencer {
 	
 	public synchronized void start() {
 		running = true;
-		if (sequence.format == 2) {
-			long currentTime = System.nanoTime();
-			for (TrackThread tt : trackThreads) {
-				tt.startTime = currentTime;
-				tt.t = new Thread(tt);
-				tt.t.start();
-			}
-		} else {
-			currentTrack = 0;
-			trackThreads[currentTrack].startTime = System.nanoTime();
-			trackThreads[currentTrack].t = new Thread(trackThreads[currentTrack]);
-			trackThreads[currentTrack].t.start();
-		}
+		playThread.t.start();
 	}
 	
 	public synchronized void stop() {
 		running = false;
 		this.notifyAll();
-		if (sequence.format == 2) {
-			for (int i = 0; i < trackThreads.length; i++) {
-				trackThreads[i].t = null;;
-			}
-		} else {
-			trackThreads[currentTrack].t = null;
-		}
+		playThread = null;
 	}
 	
 	synchronized boolean getRunning() {
@@ -64,19 +39,11 @@ public class Sequencer {
 	}
 	
 	public void addMessageListener(int track, EventListener l) {
-		if (sequence.format == 2) {
-			trackThreads[track].listeners.add(l);
-		} else {
-			trackThreads[0].listeners.add(l);
-		}
+		playThread.listeners.add(l);
 	}
 
 	public void removeMessageListener(int track, EventListener l) {
-		if (sequence.format == 2) {
-			trackThreads[track].listeners.remove(l);
-		} else {
-			trackThreads[0].listeners.remove(l);
-		}
+		playThread.listeners.remove(l);
 	}
 	
 	public void addStateListener(StateListener l) {
@@ -90,9 +57,9 @@ public class Sequencer {
 	public Track nextTrack() {
 		switch (sequence.format) {
 		case 0:
-		case 2:
-			return null;
 		case 1:
+			return null;
+		case 2:
 			if (currentTrack == sequence.tracks.length)
 				return null;
 			return sequence.tracks[++currentTrack];

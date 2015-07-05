@@ -45,7 +45,7 @@ public class Sequence implements Iterable<Track>{
 			tracks[i] = new Track(this, i, TrackStreamChunk.getChunk(is));
 		}
 		
-		if (format == 2) {
+		if (format == 0 || format == 1) {
 			for (Track t : tracks) {
 				tickLength = Math.max(tickLength, t.getTickLength());
 			}
@@ -144,7 +144,7 @@ public class Sequence implements Iterable<Track>{
 	
 	public long getMicrosecondLength() {
 		long microSecondLength = 0;
-		if (format == 2) {
+		if (format == 1 || format == 0) {
 			for (Track t : tracks) {
 				microSecondLength = Math.max(microSecondLength, t.getMicroSecondLength());
 			}

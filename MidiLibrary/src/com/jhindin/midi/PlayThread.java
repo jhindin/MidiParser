@@ -4,7 +4,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.jhindin.midi.time.PreciseTime;
 
-class TrackThread implements Runnable {
+class PlayThread implements Runnable {
 	/**
 	 * 
 	 */
@@ -20,13 +20,13 @@ class TrackThread implements Runnable {
 	
 	long startTime;
 	
-	public TrackThread(Sequencer sequencer, Track track) {
+	public PlayThread(Sequencer sequencer, Track track) {
 		// Format 2 - play given track
 		this.sequencer = sequencer;
 		this.trackToPlay = track;
 	}
 
-	public TrackThread(Sequencer sequencer) {
+	public PlayThread(Sequencer sequencer) {
 		// Format 0 and 1 - play tracks in succession
 		this.sequencer = sequencer;
 	}

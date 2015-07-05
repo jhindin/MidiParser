@@ -27,6 +27,7 @@ class Track implements Iterable<MidiEvent> {
 				events.add(event);
 			}
 		} while (event != null);
+		System.out.println("End of track");
 	}
 
 	@Override

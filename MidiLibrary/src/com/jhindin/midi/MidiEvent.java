@@ -40,8 +40,9 @@ public class MidiEvent {
 			
 		MidiEvent event = new MidiEvent();
 		event.deltaTick = deltaTick;
-		context.ticks = event.tick = context.ticks + event.deltaTick;
-		
+		context.ticks +=  event.deltaTick;
+		event.tick = context.ticks;
+		System.out.println("Delta tick " + deltaTick + " accumulated ticks " + context.ticks);
 		is.mark(1);
 
 		int status = is.read();
@@ -50,6 +51,7 @@ public class MidiEvent {
 		
 		
 		event.message = MidiMessage.read(is, (byte)status, context);
+		System.out.println("Event " + event);
 		return event;
 	}
 
