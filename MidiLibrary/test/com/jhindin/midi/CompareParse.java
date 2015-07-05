@@ -36,9 +36,14 @@ public class CompareParse {
 		com.jhindin.midi.Sequence jseq = 
 				new com.jhindin.midi.Sequence(new FileInputStream(fileName));
 		
-		assertEquals(bseq.getTracks().length, jseq.getNTracks()); 
-		
-		
-	}
+		assertEquals(bseq.getTracks().length, jseq.getTracks().length);
 
+		assertEquals(bseq.getDivisionType(), jseq.getDivisionType(), 0.0);
+		
+		for (int i = 0; i < bseq.getTracks().length; i++) {
+			com.jhindin.midi.Track jTrack = jseq.getTracks()[i];
+			javax.sound.midi.Track bTrack = bseq.getTracks()[i];
+			
+		}
+	}
 }
