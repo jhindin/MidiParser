@@ -23,7 +23,7 @@ public class CompareParse {
 	public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
         		{ "../MidiParser/ants.mid" }, 
-        		{ "../MidiParser/kesha-take-it-off.mid" }
+        		{ "../MidiParser/Jon_Skarin_-_Intro.mid" }
         });
 	}
 	
@@ -42,7 +42,7 @@ public class CompareParse {
 		assertEquals(bseq.getDivisionType(), jseq.getDivisionType(), 0.0);
 		assertEquals(bseq.getResolution(), jseq.getResolution());
 		assertEquals(bseq.getTickLength(), jseq.getTickLength());
-		assertEquals(bseq.getMicrosecondLength(), jseq.getMicrosecondLength());
+		assertEquals(bseq.getMicrosecondLength() & (~0xf), jseq.getMicrosecondLength() & (~0xf));
 		
 	}
 }
