@@ -1,5 +1,6 @@
 package com.jhindin.midi;
 
+import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -20,7 +21,7 @@ class PlayThread implements Runnable {
 	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
 	PreciseTime tickDuration = new PreciseTime();
 	
-	PriorityQueue<MidiEvent> queue;
+	PriorityQueue<ScheduleEvent> queue;
 	
 	public PlayThread(Sequencer sequencer) {
 		// Format 0 and 1 - play tracks in succession
@@ -47,16 +48,15 @@ class PlayThread implements Runnable {
 		PreciseTime currentTime = new PreciseTime();
 		PreciseTime sequenceTime = new PreciseTime();
 		PreciseTime delta = new PreciseTime();
-		
-		for (Track track : sequencer.sequence) {
-			for (MidiEvent event : track) {
-				queue.add(event);
-			}
-		}
 
 		try {
+			for (Track track : sequencer.sequence) {
+				consumeEvents(track, 0);
+			}
+
 			while (!queue.isEmpty()) {
-				MidiEvent event = queue.remove();
+				ScheduleEvent event = queue.remove();
+				MidiEvent midiEvent = event.midiEvent;
 				
 				PreciseTime.set(currentTime, 0, System.nanoTime() - startTime);
 				
@@ -73,7 +73,8 @@ class PlayThread implements Runnable {
 					if (!this.sequencer.getRunning())
 						return;
 				}
-				dispatchEvent(event);
+				dispatchEvent(midiEvent);
+				consumeEvents(event, midiEvent.tick);
 			}
 		}  catch (Exception ex) {
 			for (StateListener l : this.sequencer.stateListeners) {
@@ -81,6 +82,25 @@ class PlayThread implements Runnable {
 			}
 			return;
 		}
+	}
+
+	void consumeEvents(Track track, long tick) throws Exception
+	{
+		consumeEvents(new ScheduleEvent(track), tick);
+	}
+
+	void consumeEvents(ScheduleEvent e, long tick) throws Exception {
+		MidiEvent midiEvent = null;
+		while (e.it.hasNext() && (midiEvent = e.it.next()).tick <= tick) {
+			dispatchEvent(midiEvent);
+			midiEvent = null;
+		}
+		if (midiEvent != null) {
+			e.midiEvent = midiEvent;
+			e.tick = midiEvent.tick;
+			queue.add(e);
+		}
+		
 	}
 
 	void dispatchEvent(MidiEvent event) throws Exception {
@@ -103,5 +123,22 @@ class PlayThread implements Runnable {
 		default:
 			break;
 		}
+	}
+	
+	class ScheduleEvent implements Comparable<ScheduleEvent>{
+		MidiEvent midiEvent;
+		Iterator<MidiEvent> it;
+		long tick;
+		
+		public ScheduleEvent(Track t) {
+			it = t.iterator();
+		}
+
+		@Override
+		public int compareTo(ScheduleEvent o) {
+			// TODO Auto-generated method stub
+			return Long.compare(midiEvent.tick, o.midiEvent.tick);
+		}
+		
 	}
 }
