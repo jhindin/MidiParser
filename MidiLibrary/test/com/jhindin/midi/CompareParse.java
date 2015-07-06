@@ -44,10 +44,5 @@ public class CompareParse {
 		assertEquals(bseq.getTickLength(), jseq.getTickLength());
 		assertEquals(bseq.getMicrosecondLength(), jseq.getMicrosecondLength());
 		
-		for (int i = 0; i < bseq.getTracks().length; i++) {
-			com.jhindin.midi.Track jTrack = jseq.getTracks()[i];
-			javax.sound.midi.Track bTrack = bseq.getTracks()[i];
-			
-		}
 	}
 }

@@ -1,5 +1,6 @@
 package com.jhindin.midi;
 
+import java.util.PriorityQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.jhindin.midi.time.PreciseTime;
@@ -13,22 +14,21 @@ class PlayThread implements Runnable {
 	Exception exception;
 	CopyOnWriteArrayList<EventListener> listeners = new CopyOnWriteArrayList<>();
 	int index;
-	Track trackToPlay;
+	
+	Track tracks[];
 
 	PreciseTime quaterNoteDuration = new PreciseTime(500, 0);
 	PreciseTime tickDuration = new PreciseTime();
 	
-	long startTime;
+	PriorityQueue<MidiEvent> queue;
 	
-	public PlayThread(Sequencer sequencer, Track track) {
-		// Format 2 - play given track
-		this.sequencer = sequencer;
-		this.trackToPlay = track;
-	}
-
 	public PlayThread(Sequencer sequencer) {
 		// Format 0 and 1 - play tracks in succession
 		this.sequencer = sequencer;
+
+		tracks = sequencer.sequence.tracks;
+		t = new Thread(this);
+		queue = new PriorityQueue<>();
 	}
 	
 	void fireMessageListeners(MidiEvent event) throws Exception {
@@ -42,34 +42,25 @@ class PlayThread implements Runnable {
 		if (sequencer.sequence.divisionMode == Sequence.DivisionMode.PPQ_DIVISION)
 			PreciseTime.div(quaterNoteDuration,sequencer.sequence.resolution, tickDuration);
 
-		if (trackToPlay != null) {
-			playTrack(trackToPlay);
-		} else {
-			for (Track track : sequencer.getSequence()) {
-				playTrack(track);
-			}
-		}
+		long startTime = System.nanoTime();
 		
-	}
-	
-	void playTrack(Track track) {
 		PreciseTime currentTime = new PreciseTime();
 		PreciseTime sequenceTime = new PreciseTime();
 		PreciseTime delta = new PreciseTime();
 		
-		long elapsedTicks = 0;
-
-		for (StateListener l : this.sequencer.stateListeners) {
-			l.trackStarts(index);
-		}
-		
-		try {
+		for (Track track : sequencer.sequence) {
 			for (MidiEvent event : track) {
+				queue.add(event);
+			}
+		}
+
+		try {
+			while (!queue.isEmpty()) {
+				MidiEvent event = queue.remove();
 				
 				PreciseTime.set(currentTime, 0, System.nanoTime() - startTime);
-				elapsedTicks += event.deltaTick;
 				
-				PreciseTime.mult(tickDuration, elapsedTicks, sequenceTime);
+				PreciseTime.mult(tickDuration, event.tick, sequenceTime);
 				
 				if (!this.sequencer.getRunning())
 					break;
@@ -82,12 +73,7 @@ class PlayThread implements Runnable {
 					if (!this.sequencer.getRunning())
 						return;
 				}
-
-				if (event.message.data[0] == (byte)0xff) 
-					processMetaEvent(event);
-				
-				fireMessageListeners(event);
-				
+				dispatchEvent(event);
 			}
 		}  catch (Exception ex) {
 			for (StateListener l : this.sequencer.stateListeners) {
@@ -97,7 +83,12 @@ class PlayThread implements Runnable {
 		}
 	}
 
-	
+	void dispatchEvent(MidiEvent event) throws Exception {
+		if (event.message.data[0] == (byte)0xff) 
+			processMetaEvent(event);
+		
+		fireMessageListeners(event);
+	}
 
 	void processMetaEvent(MidiEvent event)
 	{

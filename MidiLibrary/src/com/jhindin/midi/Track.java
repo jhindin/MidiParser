@@ -27,15 +27,16 @@ class Track implements Iterable<MidiEvent> {
 				events.add(event);
 			}
 		} while (event != null);
-		System.out.println("End of track");
 	}
 
-	@Override
-	public Iterator<MidiEvent> iterator() {
-		// TODO Auto-generated method stub
-		return events.iterator();
+	public MidiEvent get(int index) {
+		return events.get(index);
 	}
 
+	public int size() {
+		return events.size();
+	}
+	
 	public long getTickLength() {
 		return events.get(events.size() - 1).tick;
 	}
@@ -101,5 +102,10 @@ class Track implements Iterable<MidiEvent> {
 			PreciseTime.mult(tickDuration, lastEvent.tick, tickTime);
 			PreciseTime.add(tickTime, length, length);
 		}
+	}
+
+	@Override
+	public Iterator<MidiEvent> iterator() {
+		return events.iterator();
 	}
 }
