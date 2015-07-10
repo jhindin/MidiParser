@@ -1,5 +1,7 @@
 package com.jhindin.midi.time;
 
+import java.util.Locale;
+
 public class PreciseTime  {
 	public long millis;
 	public int nanos;
@@ -86,6 +88,7 @@ public class PreciseTime  {
 		while (shortNanos > 0 && shortNanos % 10 == 0)
 			shortNanos /= 10;
 		
-		return String.format("%d.%d", millis, shortNanos);
+		return String.format(Locale.getDefault(), "%d.%d",
+			millis, shortNanos);
 	}
 }
