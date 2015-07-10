@@ -1,24 +1,28 @@
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
-group = 'com.jhindin.midi'
-version = '0.1'
-
-artifacts {
-    archives(file('build/outputs/aar/MidiLibrary-release.aar')) {
-        name 'MidiLibrary'
-    }
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier "source"
 }
 
-uploadArchives {
+publishing {
+    publications {
+        bar(MavenPublication) {
+            groupId 'com.jhindin.midi'
+            artifactId 'MidiLibrary'
+            version '0.1'
+            artifact(sourceJar)
+            artifact("$buildDir/outputs/aar/MidiLibrary-release.aar")
+        }
+    }
     repositories {
-        mavenDeployer {
-            repository url: 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+        maven {
+            url 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
         }
     }
 }
 
-uploadArchives.mustRunAfter build
 
 buildscript {
     repositories {
